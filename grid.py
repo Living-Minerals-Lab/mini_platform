@@ -394,6 +394,7 @@ class Application(Frame):
         x_pos, y_pos = [], []
         x_inter, y_inter = float(self.XPocketCenterVar.get()), float(self.YPocketCenterVar.get())
         xpoints, y_points = int(self.XPointsVar.get()), int(self.YPointsVar.get())
+        z_safe = float(self.SafeZVar.get())
         for i in range(xpoints):
             x_pos.append(x_inter * i)
 
@@ -402,7 +403,8 @@ class Application(Frame):
         
         for x in x_pos:
             for y in y_pos:
-                self.gcode.append(f'G00 X{x} Y{y}' + '\n')
+                self.gcode.append(f'G00 Z{z_safe}' + '\n')
+                self.gcode.append(f'G00 X{x} Y{y} Z0' + '\n')
 
         self.gcode.append(self.PostambleVar.get())
 

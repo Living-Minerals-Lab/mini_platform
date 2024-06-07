@@ -80,7 +80,12 @@ def main(n_samples):
     for i in range(n_samples):
         print(f'going to sample {i+1}.')
         go_to_one_sample()
+        time.sleep(2)
 
+        go_to_one_sample()
+        time.sleep(2)
+
+        go_to_one_sample()
         # while not go_to_sample_done():
         #     time.sleep(0.1)
 
@@ -91,7 +96,7 @@ def main(n_samples):
 
         # while not measure_done():
         #     time.sleep(0.1)
-        time.sleep(15)
+        time.sleep(20)
 
     print(f'{n_samples} samples measurement done.')
 

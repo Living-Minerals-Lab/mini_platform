@@ -404,7 +404,8 @@ class Application(Frame):
         for x in x_pos:
             for y in y_pos:
                 self.gcode.append(f'G00 Z{z_safe}' + '\n')
-                self.gcode.append(f'G00 X{x} Y{y} Z0' + '\n')
+                self.gcode.append(f'G00 X{x} Y{y}' + '\n')
+                self.gcode.append(f'G00 Z0.0' + '\n')
 
         self.gcode.append(self.PostambleVar.get())
 

@@ -66,9 +66,13 @@ class Application(Frame):
         # self.client.connect('http://192.168.137.214:3000')
         self.client.connect('http://128.3.118.197:3000')
         print(f'connection established, session id: {self.client.sid}')
+        self.client.on('jobComplete', self.on_job_complete
     
     def disconnect(self):
         self.client.disconnect()
+    
+    def on_job_complete(self, data):
+        print(data)
     
     def run_command(self):
         # self.listbox.select_clear(0, "end")

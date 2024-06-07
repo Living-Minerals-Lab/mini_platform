@@ -63,16 +63,17 @@ class Application(Frame):
         self.connect()
     
     def connect(self):
-        # self.client.connect('http://192.168.137.214:3000')
-        self.client.connect('http://128.3.118.197:3000')
+        self.client.connect('http://192.168.137.214:3000')
+        # self.client.connect('http://128.3.118.197:3000')
         print(f'connection established, session id: {self.client.sid}')
-        self.client.on('jobComplete', self.on_job_complete
+        self.client.on('status', self.on_job_complete)
     
     def disconnect(self):
         self.client.disconnect()
     
     def on_job_complete(self, data):
-        print(data)
+        print(data['comms']['runStatus'])
+        # so far there are three status: Run, Running, Idle
     
     def run_command(self):
         # self.listbox.select_clear(0, "end")

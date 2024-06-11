@@ -1,6 +1,6 @@
 import time
 import tkinter
-from tkinter import ttk
+from tkinter import Variable, ttk
 import tkinter.messagebox
 import argparse
 from tkinter.messagebox import showinfo
@@ -23,9 +23,26 @@ class LabelEntryFrame(ttk.Frame):
         self.entry.grid(row=0, column=1)
 
         self.pack()
+
+class LabelOptionFrame(ttk.Frame):
+    """
+    a custom ttk.Frame module consists of a ttk.Label and a ttk.OptionMenu.
+    """
+    def __init__(self, frame_params, label_params={}, menu_args=(), menu_kwargs={}):
+        super().__init__(**frame_params)
+
+        self.label = ttk.Label(master=self, **label_params)
+        
+        self.menu_var = tkinter.StringVar()
+        self.menu = ttk.OptionMenu(self, self.menu_var, *menu_args, **menu_kwargs)
+        
+        self.label.grid(row=0, column=0)
+        self.menu.grid(row=0, column=1)
+
+        self.pack()
         
 class ParaFrame(ttk.LabelFrame):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, unit_menu_callback, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # preamble and postamble
@@ -34,13 +51,18 @@ class ParaFrame(ttk.LabelFrame):
         #                              entry_params={'width': 10},
         #                              entry_default='Unit')
 
-        self.unit = ttk.Frame(master=self)
-        self.unit_label = ttk.Label(master=self.unit, text='Unit')
-        self.unit_label.grid(row=0, column=0)
-        self.unit_var = tkinter.StringVar()
-        self.unit_menu = ttk.OptionMenu(self.unit, self.unit_var, 'MM', 'MM', 'Inch')
-        self.unit_menu.grid(row=0, column=1)
-        self.unit.pack()
+        # self.unit = ttk.Frame(master=self)
+        # self.unit_label = ttk.Label(master=self.unit, text='Unit')
+        # self.unit_label.grid(row=0, column=0)
+        # self.unit_var = tkinter.StringVar()
+        # self.unit_menu = ttk.OptionMenu(self.unit, self.unit_var, 'MM', 'MM', 'Inch', command=unit_menu_callback)
+        # self.unit_menu.grid(row=0, column=1)
+        # self.unit.pack()
+
+        self.unit = LabelOptionFrame(frame_params={'master': self},
+                                     label_params={'text': 'Unit'}, 
+                                     menu_args=('MM', 'MM', 'Inch'),
+                                     menu_kwargs={'command': unit_menu_callback})
 
         self.z_safe = LabelEntryFrame(frame_params={'master': self},
                                      label_params={'text': 'Z Safe'},
@@ -116,14 +138,32 @@ class GCodeFrame(ttk.LabelFrame):
         self.pack()
 
 class CommandFrame(ttk.LabelFrame):
-    def __init__(self, button_callback, *args, **kwargs):
+    def __init__(self, mode_menu_callback, button_callback, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.entry = ttk.Entry(master=self)
-        self.entry.grid(row=0, column=0)
+        # self.scripted = LabelEntryFrame(frame_params={'master': self},
+        #                              label_params={'text': 'Scripted'},
+        #                              entry_params={'width': 10},
+        #                              entry_default='')
+
+        # self.custom  = LabelEntryFrame(frame_params={'master': self},
+        #                              label_params={'text': 'Custom'},
+        #                              entry_params={'width': 10},
+        #                              entry_default='')
+
+        self.mode = LabelOptionFrame(frame_params={'master': self},
+                                     label_params={'text': 'Mode'}, 
+                                     menu_args=('Scripted', 'Scripted', 'Custom'),
+                                     menu_kwargs={'command': mode_menu_callback})
+
+        self.entry_var = tkinter.StringVar()
+        self.entry = ttk.Entry(master=self, textvariable=self.entry_var)
+        # self.entry.grid(row=0, column=0) 
+        self.entry.pack()
 
         self.run_command = ttk.Button(self, text='Run Command', command=button_callback)
-        self.run_command.grid(row=1, column=0)
+        # self.run_command.grid(row=1, column=0)
+        self.run_command.pack()
         
         self.pack()
 
@@ -137,16 +177,41 @@ class Application(tkinter.Tk):
         self.gantry_status.pack()
         self.update_gantry_status()
 
-        self.para_frame = ParaFrame(master=self, borderwidth=10, text='Parameters')
+        self.para_frame = ParaFrame(unit_menu_callback=self.set_unit, master=self, borderwidth=10, text='Parameters')
         # para_frame.pack()
 
         self.gcode_frame = GCodeFrame(listbox_select_callback=self.listbox_item_selected,
                                   button_callback=self.generate_gcode,
                                   master=self, borderwidth=10, text='G-code')
  
-        self.command_frame = CommandFrame(button_callback=self.run_command, master=self, borderwidth=10, text='Command')
+        self.command_frame = CommandFrame(mode_menu_callback=self.set_mode, button_callback=self.run_command, master=self, borderwidth=10, text='Command')
+
 
         self.generate_gcode()
+        self.command_frame.entry.config(state='readonly') # set this to disabled because script command mode is by default 
+
+    
+    def set_unit(self, selected_unit):
+        match selected_unit:
+            case 'MM':
+                preamble_text = 'G17 G21 G90'
+            case 'Inch':
+                preamble_text = 'G17 G20 G90'
+        self._set_entry_text(self.para_frame.preamble.entry, preamble_text)
+        showinfo(title='Unit setup.', message=f'Unit has been set to {selected_unit}, regenerate gcode if needed.')
+
+
+    def set_mode(self, selected_mode):
+        match selected_mode:
+            case 'Scripted':
+                self.command_frame.entry.config(state='readonly')
+                self.set_command_entry()
+                print('script' + selected_mode)
+
+            case 'Custom':
+                self.command_frame.entry.config(state='normal')
+                self.command_frame.entry.delete(0, tkinter.END)
+                print('custom' + selected_mode)
 
 
     def listbox_item_selected(self, event):
@@ -197,13 +262,14 @@ class Application(tkinter.Tk):
         gcode_line = self.command_frame.entry.get()
         
         if not self.gantry_controller.gantry_ready():
-            showinfo(title='Information', message='Gantry system is not ready.\nMake sure it is connected and in idle status.')
+            showinfo(title='Gantry system unavailable.', message='Gantry system is not ready.\nMake sure it is connected and in idle status.')
         else: 
             self.gantry_controller.run_one_line_gcode(gcode_line=gcode_line)
 
-            self.set_commmand_idx(min(self.command_idx + 1, len(self.gcode) - 1))
-            self.listbox_highlight_selection()
-            print(gcode_line)
+            if self.command_frame.mode.menu_var.get() == 'Scripted':
+                self.set_commmand_idx(min(self.command_idx + 1, len(self.gcode) - 1))
+                self.listbox_highlight_selection()
+            # print(gcode_line)
     
     def set_commmand_idx(self, idx):
             self.command_idx = idx
@@ -212,8 +278,11 @@ class Application(tkinter.Tk):
             # self.command_frame.entry.insert(0, self.gcode[self.command_idx])
     
     def set_command_entry(self):
-        self.command_frame.entry.delete(0, tkinter.END)
-        self.command_frame.entry.insert(0, self.gcode[self.command_idx])
+        # self.command./
+        self.command_frame.entry_var.set(self.gcode[self.command_idx])
+        # self._set_entry_text(self.command_frame.entry_var, self.gcode/[self.command_idx])
+        # self.command_frame.entry.delete(0, tkinter.END)
+        # self.command_frame.entry.insert(0, self.gcode[self.command_idx])
 
     def listbox_highlight_selection(self):
         self.gcode_frame.listbox.select_clear(0, "end")
@@ -225,6 +294,11 @@ class Application(tkinter.Tk):
     def update_gantry_status(self):
         self.gantry_status.config(text=f'Gantry status: {self.gantry_controller.gantry_status}')
         self.after(10, self.update_gantry_status)
+
+    def _set_entry_text(self, entry, text):
+        # var.set(text)
+        entry.delete(0, tkinter.END)
+        entry.insert(tkinter.END, text)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Start the GUI.')

@@ -40,6 +40,7 @@
 """
 
 from tkinter import *
+from tkinter import ttk
 from math import *
 import os
 import socketio
@@ -63,8 +64,8 @@ class Application(Frame):
         self.connect()
     
     def connect(self):
-        self.client.connect('http://192.168.137.214:3000')
-        # self.client.connect('http://128.3.118.197:3000')
+        # self.client.connect('http://192.168.137.214:3000')
+        self.client.connect('http://128.3.118.197:3000')
         print(f'connection established, session id: {self.client.sid}')
         self.client.on('status', self.on_job_complete)
     
@@ -354,7 +355,7 @@ class Application(Frame):
             orient=VERTICAL,
             command=self.listbox.yview
         )
-
+        
         self.listbox['yscrollcommand'] = self.scrollbar.set
 
         self.scrollbar.grid(row=self.rownumber, column=1)

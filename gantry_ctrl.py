@@ -1,7 +1,6 @@
 import socketio
 import abc
 import time
-from threading import Timer
 
 stats = False
 
@@ -24,18 +23,17 @@ class GantryController(metaclass=abc.ABCMeta):
         raise NotImplementedError('must define send_one_line_gcode to use this base class')
 
     @abc.abstractmethod
-    def get_response(self) -> bool:
+    def gantry_ready(self) -> bool:
         """
-        this function gets response from grbl
-        and checks if grbl is ready for the next line of gcode
+        this function returns a boolean indicating if the gantry system is ready for the next line of gcode
 
         Raises:
             NotImplementedError: this is the abstract method in the base class and must be implemented separately for subclasses
 
         Returns:
-            bool: true: grbl's status. true: ready; false: not ready
+            bool: true: gantry system's status. true: ready; false: not ready
         """
-        raise NotImplementedError('must define get_response to use this base class')
+        raise NotImplementedError('must define gantry_ready to use this base class')
 
     def run_whole_gcode(self, gcode_whole: list[str]):
         """
@@ -46,9 +44,9 @@ class GantryController(metaclass=abc.ABCMeta):
             gcode_whole (list[str]): list of lines of gcode to be executed.
         """
         for line in gcode_whole:
-            print(f'Executing gcode: {line}')
+            # print(f'Executing gcode: {line}')
             self.run_one_line_gcode(line)
-            while not self.get_response():
+            while not self.gantry_ready():
                 time.sleep(0.1)
 
 class OpenBuildsGantryController(GantryController):
@@ -63,38 +61,142 @@ class OpenBuildsGantryController(GantryController):
         """
         super().__init__()
 
-        # self.client = socketio.Client()
-        # self.connect()
         self.client = socketio.Client()
-        self.connect_open_builds_ctrl(open_builds_ctrl_addr)
+        self.client.on('connect', self.on_connect)
+        self.client.on('connect_error', self.on_connect_error)
+        self.client.on('disconnect', self.on_disconnect)
 
-    def connect_open_builds_ctrl(self, open_builds_ctrl_addr: str) -> None:
-        # self.client.connect(open_builds_ctrl_addr)
-        print('connected')
-        pass
-    def disconnect_open_builds_ctrl(self) -> None:
-        # self.client.disconnect()
-        pass
+        # self.connect_open_builds_ctrl(open_builds_ctrl_addr)
+        self.client.connect(open_builds_ctrl_addr)
 
-    def run_one_line_gcode(self, gcode_line: str):
-        # return super().send_one_line_gcode()
-        # self.client.emit('runCommand', gcode_line)
-        print(gcode_line)
+        self.gantry_status = ''
+        self.client.on('status', self.on_status)
 
-    def get_response(self) -> bool:
-        # return super().get_response()
-        print(f'Current status: {stats}.')
-        return stats
+        print(self.gantry_status)
+    
+    def on_connect(self) -> None:
+        print(f'Connectted to OpenBuilds Control. SSID: {self.client.sid}.')
+    
+    def on_connect_error(self, data) -> None:
+        print(f'Connection to OpenBuilds Control failed.')
 
-# def fake_status():
-#     global stats 
-#     stats = True
+    def on_disconnect(self) -> None:
+        print(f'Disconnected from Openbuilds Control.')
+
+    def on_status(self, data):
+        """
+        callback function for the "status" event emitted from the OpenBuilds Control server.
+        Set self.status according to the response from the server.    
+        Args:
+            data (dict): contains the status of the gantry system. Format shows below.
+            What is interesting is data['comms']['runStatus']. Possible responses are ['Run', 'Running', 'Idle', 'Pending'].
+            laststatus = {
+                "driver": {
+                    "version": "1.0.229",
+                    "ipaddress": "192.168.87.100",
+                    "operatingsystem": "windows"
+                },
+                "machine": {
+                    "name": "minimill",
+                    "inputs": [],
+                    "overrides": {
+                        "feedOverride": 100,
+                        "spindleOverride": 100,
+                        "realFeed": 0,
+                        "realSpindle": 0,
+                        "rapidOverride": 100
+                    },
+                    "tool": {
+                        "nexttool": {
+                            "number": 10,
+                            "line": "M6 T10\n"
+                        }
+                    },
+                    "probe": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0,
+                        "state": -1,
+                        "plate": 0,
+                        "request": {}
+                    },
+                    "position": {
+                        "work": {
+                            "x": 13.17,
+                            "y": 3.22,
+                            "z": 2.65,
+                            "a": 0,
+                            "e": 0
+                        },
+                        "offset": {
+                            "x": 22.25,
+                            "y": -138.79,
+                            "z": -49.29,
+                            "a": 0,
+                            "e": 0
+                        }
+                    },
+                    "firmware": {
+                        "type": "grbl",
+                        "version": "1.1g",
+                        "date": "",
+                        "buffer": [
+                            "15",
+                            "128"
+                        ],
+                        "features": [
+                            "V"
+                        ],
+                        "blockBufferSize": "15",
+                        "rxBufferSize": "128"
+                    }
+                },
+                "comms": {
+                    "connectionStatus": 2,
+                    "runStatus": "Idle",
+                    "queue": 0,
+                    "blocked": false,
+                    "paused": false,
+                    "controllerBuffer": 0,
+                    "interfaces": {
+                        "ports": [
+                            {
+                                "path": "COM3",
+                                "manufacturer": "FTDI",
+                                "serialNumber": "5&222e27aa&0&6",
+                                "pnpId": "FTDIBUS\\VID_0403+PID_6001+5&222E27AA&0&6\\0000",
+                                "vendorId": "0403",
+                                "productId": "6001"
+                            }
+                        ],
+                        "activePort": "COM3",
+                        "activeBaud": 115200
+                    },
+                    "alarm": "13 - undefined"
+                }
+            }
+        """
+        self.gantry_status = data['comms']['runStatus']
+
+    def run_one_line_gcode(self, gcode_line: str) -> None:
+        """emit the line of gcode to be executed to "runCommand". 
+
+        Args:
+            gcode_line (str): a single line of gcode to be executed. 
+        """
+        print(f'Executing gcode: {gcode_line}')
+        self.client.emit('runCommand', gcode_line)
+
+    def gantry_ready(self) -> bool:
+        """
+            Check if the gantry system is in 'Idle' status.
+        Returns:
+            bool: if the gantry system is ready for actions.
+        """
+        print(f'Current status: {self.gantry_status}.')
+        return self.gantry_status == 'Idle'
+
 
 if __name__ == '__main__':
-    a = OpenBuildsGantryController('123')
-    t = Timer(10, fake_status)
-    t.start()
-    with open('gg', 'r') as f:
-        gcode_whole = f.readlines()
-        a.run_whole_gcode(gcode_whole)
+    a = OpenBuildsGantryController('http://128.3.118.197:3000')
     # a.send_one_line_gcode()

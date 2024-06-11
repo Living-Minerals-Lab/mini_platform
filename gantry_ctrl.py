@@ -57,7 +57,7 @@ class OpenBuildsGantryController(GantryController):
         Then communications are done simply by using socket.io "emit" and "on" functions.   
 
         Args:
-            open_builds_ctrl_addr (str): ip address and port of the openbuilds control socket.io server.
+            open_builds_ctrl_addr (str): ip address of the openbuilds control socket.io server.
         """
         super().__init__()
 
@@ -67,7 +67,8 @@ class OpenBuildsGantryController(GantryController):
         self.client.on('disconnect', self.on_disconnect)
 
         # self.connect_open_builds_ctrl(open_builds_ctrl_addr)
-        self.client.connect(open_builds_ctrl_addr)
+        # open builds control is on port 3000. 
+        self.client.connect('http://' + open_builds_ctrl_addr + ':3000')
 
         self.gantry_status = ''
         self.client.on('status', self.on_status)

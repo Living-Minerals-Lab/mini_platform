@@ -2,6 +2,8 @@ import time
 import tkinter
 from tkinter import ttk
 import tkinter.messagebox
+import argparse
+from tkinter.messagebox import showinfo
 
 from gantry_ctrl import OpenBuildsGantryController
 
@@ -129,6 +131,12 @@ class Application(tkinter.Tk):
     def __init__(self, open_builds_ctrl_addr, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.gantry_controller = OpenBuildsGantryController(open_builds_ctrl_addr)
+
+        self.gantry_status = ttk.Label(master=self)
+        self.gantry_status.pack()
+        self.update_gantry_status()
+
         self.para_frame = ParaFrame(master=self, borderwidth=10, text='Parameters')
         # para_frame.pack()
 
@@ -138,9 +146,8 @@ class Application(tkinter.Tk):
  
         self.command_frame = CommandFrame(button_callback=self.run_command, master=self, borderwidth=10, text='Command')
 
-        # self.gantry_controller = OpenBuildsGantryController(open_builds_ctrl_addr)
-
         self.generate_gcode()
+
 
     def listbox_item_selected(self, event):
         # get selected indices
@@ -189,16 +196,14 @@ class Application(tkinter.Tk):
     def run_command(self):
         gcode_line = self.command_frame.entry.get()
         
-        # while not self.gantry_controller.gantry_ready():
-        #     time.sleep(0.1)
-        # self.gantry_controller.run_one_line_gcode(gcode_line=gcode_line)
+        if not self.gantry_controller.gantry_ready():
+            showinfo(title='Information', message='Gantry system is not ready.\nMake sure it is connected and in idle status.')
+        else: 
+            self.gantry_controller.run_one_line_gcode(gcode_line=gcode_line)
 
-        # self.client.emit('runCommand', self.gcode[self.command_idx])
-        self.set_commmand_idx(min(self.command_idx + 1, len(self.gcode) - 1))
-        # self.listbox.activate(self.command_idx)
-        # self.listbox.itemconfig(self.command_idx, bg='red')
-        self.listbox_highlight_selection()
-        print(gcode_line)
+            self.set_commmand_idx(min(self.command_idx + 1, len(self.gcode) - 1))
+            self.listbox_highlight_selection()
+            print(gcode_line)
     
     def set_commmand_idx(self, idx):
             self.command_idx = idx
@@ -217,7 +222,13 @@ class Application(tkinter.Tk):
         self.gcode_frame.listbox.activate(self.command_idx)
         self.gcode_frame.listbox.selection_anchor(self.command_idx)
 
+    def update_gantry_status(self):
+        self.gantry_status.config(text=f'Gantry status: {self.gantry_controller.gantry_status}')
+        self.after(10, self.update_gantry_status)
 
 if __name__ == '__main__':
-    app = Application('123')
+    parser = argparse.ArgumentParser(description='Start the GUI.')
+    parser.add_argument('open_builds_ctrl_addr', type=str, help='ip address of open builds control server')
+    args = parser.parse_args()
+    app = Application(args.open_builds_ctrl_addr)
     app.mainloop()

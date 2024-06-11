@@ -1,7 +1,9 @@
-from ast import main
+import time
 import tkinter
 from tkinter import ttk
 import tkinter.messagebox
+
+from gantry_ctrl import OpenBuildsGantryController
 
 
 class LabelEntryFrame(ttk.Frame):
@@ -76,32 +78,38 @@ class ParaFrame(ttk.LabelFrame):
         self.pack()
 
 class GCodeFrame(ttk.LabelFrame):
-    def __init__(self, list_box_select_callback, button_callback, *args, **kwargs):
+    def __init__(self, listbox_select_callback, button_callback, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.list_box = tkinter.Listbox(
-            self,
+        self.frame = ttk.Frame(master=self)
+
+        self.listbox = tkinter.Listbox(
+            self.frame,
             # listvariable=self.lvar,
             height=6,
             selectmode=tkinter.SINGLE)
 
-        self.list_box.grid(row=0, column=0)
+        self.listbox.grid(row=0, column=0)
+        self.listbox.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
 
         self.scrollbar = ttk.Scrollbar(
-            self,
+            master=self.frame,
             orient=tkinter.VERTICAL,
-            command=self.list_box.yview
+            command=self.listbox.yview
         )
         
-        self.list_box['yscrollcommand'] = self.scrollbar.set
+        self.listbox['yscrollcommand'] = self.scrollbar.set
 
-        self.scrollbar.grid(row=0, column=1)
+        # self.scrollbar.grid(row=0, column=1)
+        self.scrollbar.pack(side=tkinter.LEFT, fill=tkinter.Y)
 
-        self.list_box.bind('<<ListboxSelect>>', list_box_select_callback)
-        self.list_box.configure(exportselection=False)
+        self.listbox.bind('<<ListboxSelect>>', listbox_select_callback)
+        self.listbox.configure(exportselection=False)
 
-        self.gen_g_code = ttk.Button(self, text='Generate G-code', command=button_callback)
-        self.gen_g_code.grid(row=1, column=0)
+        self.frame.grid(row=0, column=0)
+
+        self.gen_gcode = ttk.Button(self, text='Generate G-code', command=button_callback)
+        self.gen_gcode.grid(row=1, column=0)
         
         self.pack()
 
@@ -118,39 +126,98 @@ class CommandFrame(ttk.LabelFrame):
         self.pack()
 
 class Application(tkinter.Tk):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, open_builds_ctrl_addr, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.para_frame = ParaFrame(master=self, borderwidth=10, text='Parameters')
         # para_frame.pack()
 
-        self.g_code_frame = GCodeFrame(list_box_select_callback=self.items_selected,
-                                  button_callback=self.generate_g_code,
+        self.gcode_frame = GCodeFrame(listbox_select_callback=self.listbox_item_selected,
+                                  button_callback=self.generate_gcode,
                                   master=self, borderwidth=10, text='G-code')
-        # ttk.LabelFrame(master=self, borderwidth=10, text='G-code')
-        # g_code_frame.pack()
-        self.command_frame = CommandFrame(self.run_command, master=self, borderwidth=10, text='Command')
+ 
+        self.command_frame = CommandFrame(button_callback=self.run_command, master=self, borderwidth=10, text='Command')
 
-        
-    def items_selected(self, event):
+        # self.gantry_controller = OpenBuildsGantryController(open_builds_ctrl_addr)
+
+        self.generate_gcode()
+
+    def listbox_item_selected(self, event):
         # get selected indices
-        selected_indices = self.g_code_frame.list_box.curselection()
+        selected_indices = self.gcode_frame.listbox.curselection()
         if selected_indices:
-            print(selected_indices)
+            # print(selected_indices)
             # get selected items
-            # selected_langs = ",".join([self.list_box.get(i) for i in selected_indices])
+            # selected_langs = ",".join([self.listbox.get(i) for i in selected_indices])
             # msg = f'You selected: {selected_langs}'
             # print(s)
-            self.command_idx = selected_indices[0]
-            tkinter.messagebox.showinfo(title='Information', message=self.gcode[selected_indices[0]])
+            self.set_commmand_idx(selected_indices[0])
+            # tkinter.messagebox.showinfo(title='Information', message=self.gcode[selected_indices[0]])
     
-    def generate_g_code(self):
-        print('generate g-code')
+    def generate_gcode(self):
+        self.gcode, self.command_idx = [], 0
+
+        self.gcode.append(self.para_frame.preamble.entry.get() + '\n')
+        
+        x_pos, y_pos = [], []
+        x_interval, y_interval = float(self.para_frame.x_interval.entry.get()), float(self.para_frame.y_interval.entry.get())
+        x_points, y_points = int(self.para_frame.x_poinrts.entry.get()), int(self.para_frame.y_poinrts.entry.get())
+        z_safe = float(self.para_frame.z_safe.entry.get())
+
+        for i in range(x_points):
+            x_pos.append(x_interval * i)
+
+        for i in range(y_points):
+            y_pos.append(y_interval * i)
+        
+        for x in x_pos:
+            for y in y_pos:
+                self.gcode.append(f'G00 Z{z_safe}' + '\n')
+                self.gcode.append(f'G00 X{x} Y{y} Z0' + '\n')
+
+        self.gcode.append(self.para_frame.postable.entry.get())
+
+        # self.lvar.get()
+        self.gcode_frame.listbox.delete(0, tkinter.END)
+        for i, line in enumerate(self.gcode):
+            self.gcode_frame.listbox.insert(tkinter.END, f'{i+1}. ' + line)
+        
+        self.set_command_entry()
+        
+        self.listbox_highlight_selection()
     
     def run_command(self):
-        print('run command')
+        gcode_line = self.command_frame.entry.get()
+        
+        # while not self.gantry_controller.gantry_ready():
+        #     time.sleep(0.1)
+        # self.gantry_controller.run_one_line_gcode(gcode_line=gcode_line)
+
+        # self.client.emit('runCommand', self.gcode[self.command_idx])
+        self.set_commmand_idx(min(self.command_idx + 1, len(self.gcode) - 1))
+        # self.listbox.activate(self.command_idx)
+        # self.listbox.itemconfig(self.command_idx, bg='red')
+        self.listbox_highlight_selection()
+        print(gcode_line)
+    
+    def set_commmand_idx(self, idx):
+            self.command_idx = idx
+            self.set_command_entry()
+            # self.command_frame.entry.delete(0, tkinter.END)
+            # self.command_frame.entry.insert(0, self.gcode[self.command_idx])
+    
+    def set_command_entry(self):
+        self.command_frame.entry.delete(0, tkinter.END)
+        self.command_frame.entry.insert(0, self.gcode[self.command_idx])
+
+    def listbox_highlight_selection(self):
+        self.gcode_frame.listbox.select_clear(0, "end")
+        self.gcode_frame.listbox.selection_set(self.command_idx)
+        self.gcode_frame.listbox.see(self.command_idx)
+        self.gcode_frame.listbox.activate(self.command_idx)
+        self.gcode_frame.listbox.selection_anchor(self.command_idx)
 
 
 if __name__ == '__main__':
-    app = Application()
+    app = Application('123')
     app.mainloop()

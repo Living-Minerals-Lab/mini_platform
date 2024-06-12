@@ -101,9 +101,7 @@ def main(n_samples):
     print(f'{n_samples} samples measurement done.')
 
 if __name__ == '__main__':
-
-
-    parser = argparse.ArgumentParser(description='Start the whole measurement.')
+    parser = argparse.ArgumentParser(description='Start automatic measurements.')
     parser.add_argument('n_samples', type=int, help='number of samples to be measured')
     args = parser.parse_args()
     # print(args.accumulate(args.integers))

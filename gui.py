@@ -1,12 +1,15 @@
-import time
 import tkinter
-from tkinter import Variable, ttk
+from tkinter import ttk
 import tkinter.messagebox
 import argparse
 from tkinter.messagebox import showinfo
 
 from gantry_ctrl import OpenBuildsGantryController
 
+#TODO as of Jun 11:
+# - add patches for canvas and camera input
+# - better layout
+# - better theme: boostrapttk 
 
 class LabelEntryFrame(ttk.Frame):
     """
@@ -23,6 +26,7 @@ class LabelEntryFrame(ttk.Frame):
         self.entry.grid(row=0, column=1)
 
         self.pack()
+
 
 class LabelOptionFrame(ttk.Frame):
     """
@@ -41,23 +45,10 @@ class LabelOptionFrame(ttk.Frame):
 
         self.pack()
         
+
 class ParaFrame(ttk.LabelFrame):
     def __init__(self, unit_menu_callback, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # preamble and postamble
-        # self.unit = LabelEntryFrame(frame_params={'master': self},
-        #                              label_params={'text': 'Unit'},
-        #                              entry_params={'width': 10},
-        #                              entry_default='Unit')
-
-        # self.unit = ttk.Frame(master=self)
-        # self.unit_label = ttk.Label(master=self.unit, text='Unit')
-        # self.unit_label.grid(row=0, column=0)
-        # self.unit_var = tkinter.StringVar()
-        # self.unit_menu = ttk.OptionMenu(self.unit, self.unit_var, 'MM', 'MM', 'Inch', command=unit_menu_callback)
-        # self.unit_menu.grid(row=0, column=1)
-        # self.unit.pack()
 
         self.unit = LabelOptionFrame(frame_params={'master': self},
                                      label_params={'text': 'Unit'}, 
@@ -101,6 +92,7 @@ class ParaFrame(ttk.LabelFrame):
 
         self.pack()
 
+
 class GCodeFrame(ttk.LabelFrame):
     def __init__(self, listbox_select_callback, button_callback, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -124,7 +116,6 @@ class GCodeFrame(ttk.LabelFrame):
         
         self.listbox['yscrollcommand'] = self.scrollbar.set
 
-        # self.scrollbar.grid(row=0, column=1)
         self.scrollbar.pack(side=tkinter.LEFT, fill=tkinter.Y)
 
         self.listbox.bind('<<ListboxSelect>>', listbox_select_callback)
@@ -136,6 +127,7 @@ class GCodeFrame(ttk.LabelFrame):
         self.gen_gcode.grid(row=1, column=0)
         
         self.pack()
+
 
 class CommandFrame(ttk.LabelFrame):
     def __init__(self, mode_menu_callback, button_callback, *args, **kwargs):
@@ -167,6 +159,7 @@ class CommandFrame(ttk.LabelFrame):
         
         self.pack()
 
+
 class Application(tkinter.Tk):
     def __init__(self, open_builds_ctrl_addr, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -190,7 +183,7 @@ class Application(tkinter.Tk):
         self.generate_gcode()
         self.command_frame.entry.config(state='readonly') # set this to disabled because script command mode is by default 
 
-    
+
     def set_unit(self, selected_unit):
         match selected_unit:
             case 'MM':
@@ -206,12 +199,10 @@ class Application(tkinter.Tk):
             case 'Scripted':
                 self.command_frame.entry.config(state='readonly')
                 self.set_command_entry()
-                print('script' + selected_mode)
 
             case 'Custom':
                 self.command_frame.entry.config(state='normal')
                 self.command_frame.entry.delete(0, tkinter.END)
-                print('custom' + selected_mode)
 
 
     def listbox_item_selected(self, event):
@@ -226,6 +217,7 @@ class Application(tkinter.Tk):
             self.set_commmand_idx(selected_indices[0])
             # tkinter.messagebox.showinfo(title='Information', message=self.gcode[selected_indices[0]])
     
+
     def generate_gcode(self):
         self.gcode, self.command_idx = [], 0
 
@@ -258,6 +250,7 @@ class Application(tkinter.Tk):
         
         self.listbox_highlight_selection()
     
+
     def run_command(self):
         gcode_line = self.command_frame.entry.get()
         
@@ -271,18 +264,21 @@ class Application(tkinter.Tk):
                 self.listbox_highlight_selection()
             # print(gcode_line)
     
+
     def set_commmand_idx(self, idx):
             self.command_idx = idx
             self.set_command_entry()
             # self.command_frame.entry.delete(0, tkinter.END)
             # self.command_frame.entry.insert(0, self.gcode[self.command_idx])
     
+
     def set_command_entry(self):
         # self.command./
         self.command_frame.entry_var.set(self.gcode[self.command_idx])
         # self._set_entry_text(self.command_frame.entry_var, self.gcode/[self.command_idx])
         # self.command_frame.entry.delete(0, tkinter.END)
         # self.command_frame.entry.insert(0, self.gcode[self.command_idx])
+
 
     def listbox_highlight_selection(self):
         self.gcode_frame.listbox.select_clear(0, "end")
@@ -291,14 +287,17 @@ class Application(tkinter.Tk):
         self.gcode_frame.listbox.activate(self.command_idx)
         self.gcode_frame.listbox.selection_anchor(self.command_idx)
 
+
     def update_gantry_status(self):
         self.gantry_status.config(text=f'Gantry status: {self.gantry_controller.gantry_status}')
         self.after(10, self.update_gantry_status)
+
 
     def _set_entry_text(self, entry, text):
         # var.set(text)
         entry.delete(0, tkinter.END)
         entry.insert(tkinter.END, text)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Start the GUI.')

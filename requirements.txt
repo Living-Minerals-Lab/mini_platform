@@ -2,3 +2,4 @@ opencv-python
 pyautogui
 numpy
 python-socketio[client]
+ttkbootstrap

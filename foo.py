@@ -3,7 +3,8 @@ import cv2 as cv
 import numpy as np
 import pyautogui
 
-if __name__ == '__main__':
+
+def cvfoo():
 
     screenshot = cv.imread("grid.png", cv.IMREAD_GRAYSCALE) # return shape(height * width)
     template = cv.imread("command_button.png", cv.IMREAD_GRAYSCALE)
@@ -25,3 +26,22 @@ if __name__ == '__main__':
     cv.waitKey(0)
     # print(min_loc)
 
+
+if __name__ == '__main__':
+
+
+    import ttkbootstrap as ttk
+    from ttkbootstrap.constants import *
+
+    app = ttk.Window()
+
+    frame = ttk.Frame(padding=5)
+    frame.pack(padx=10, pady=10)
+
+    b1 = ttk.Button(frame, text="Button 1", bootstyle="success")
+    b1.pack(side=LEFT, padx=5, pady=10)
+
+    b2 = ttk.Button(frame, text="Button 2", bootstyle="info-outline")
+    b2.pack(side=LEFT, padx=5, pady=10)
+
+    app.mainloop()

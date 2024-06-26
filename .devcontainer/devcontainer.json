@@ -53,5 +53,5 @@
 			]
 		}
 	},
-	"postCreateCommand": "pip3 install -r requirements.txt"
+	"postCreateCommand": "bash ./post_create.sh"
 }

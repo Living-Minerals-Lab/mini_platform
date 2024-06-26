@@ -1,0 +1,3 @@
+[console_scripts]
+py_test = gantry.template_node:main
+

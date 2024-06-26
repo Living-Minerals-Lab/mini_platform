@@ -1,0 +1,22 @@
+running egg_info
+writing ../../build/gantry/gantry.egg-info/PKG-INFO
+writing dependency_links to ../../build/gantry/gantry.egg-info/dependency_links.txt
+writing entry points to ../../build/gantry/gantry.egg-info/entry_points.txt
+writing requirements to ../../build/gantry/gantry.egg-info/requires.txt
+writing top-level names to ../../build/gantry/gantry.egg-info/top_level.txt
+reading manifest file '../../build/gantry/gantry.egg-info/SOURCES.txt'
+writing manifest file '../../build/gantry/gantry.egg-info/SOURCES.txt'
+running build
+running build_py
+copying gantry/template_node.py -> /workspace/build/gantry/build/lib/gantry
+running install
+running install_lib
+copying /workspace/build/gantry/build/lib/gantry/template_node.py -> /workspace/install/gantry/lib/python3.10/site-packages/gantry
+byte-compiling /workspace/install/gantry/lib/python3.10/site-packages/gantry/template_node.py to template_node.cpython-310.pyc
+running install_data
+running install_egg_info
+removing '/workspace/install/gantry/lib/python3.10/site-packages/gantry-0.0.0-py3.10.egg-info' (and everything under it)
+Copying ../../build/gantry/gantry.egg-info to /workspace/install/gantry/lib/python3.10/site-packages/gantry-0.0.0-py3.10.egg-info
+running install_scripts
+Installing py_test script to /workspace/install/gantry/lib/gantry
+writing list of installed files to '/workspace/build/gantry/install.log'

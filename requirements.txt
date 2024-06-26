@@ -3,3 +3,4 @@ pyautogui
 numpy
 python-socketio[client]
 ttkbootstrap
+py-trees

@@ -52,5 +52,6 @@
 				"ms-iot.vscode-ros"
 			]
 		}
-	}
+	},
+	"postCreateCommand": "pip3 install -r requirements.txt"
 }

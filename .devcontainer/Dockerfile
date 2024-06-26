@@ -23,8 +23,6 @@ RUN apt-get update && apt-get upgrade -y \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install -r requirements.txt
-
 ENV SHELL /bin/bash
 USER $USERNAME
 

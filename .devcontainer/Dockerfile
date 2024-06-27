@@ -1,4 +1,4 @@
-FROM ros:humble
+FROM ros:humble-ros-base-jammy
 
 ARG USERNAME=xcao
 ARG USER_UID=1000
@@ -15,7 +15,7 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
 RUN apt-get update && apt-get upgrade -y \ 
-    && apt-get -y install --no-install-recommends python3-pip \
+    && apt-get -y install --no-install-recommends ros-humble-desktop=0.10.0-1* python3-pip \
     ros-humble-turtlesim python3-colcon-common-extensions\   
    #
    # Clean up

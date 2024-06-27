@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "py_test = gantry.template_node:main"
+            "py_template = gantry.template_node:main"
         ],
     },
 )

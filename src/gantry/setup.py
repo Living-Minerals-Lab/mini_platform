@@ -23,7 +23,8 @@ setup(
             "py_template = gantry.template_node:main",
             "gantry_sub = gantry.gantry_sub:main",
             "gantry_pub = gantry.gantry_pub:main",
-            "move_gantry = gantry.gantry_srv:main"
+            "move_gantry_srv = gantry.move_gantry_srv:main",
+            "is_gantry_rdy_srv = gantry.is_gantry_rdy_srv:main"
         ],
     },
 )

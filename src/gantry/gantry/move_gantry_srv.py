@@ -6,19 +6,8 @@ from custom_interfaces.srv import MoveGantry
 from utils.gantry_ctrl import OpenBuildsGantryController
 
 class MoveGantryService(Node):
-
     def __init__(self):
-        super().__init__('gantry_sub')
-        self.service
-
-        self.subscription  # prevent unused variable warning
-
-    def listener_callback(self, msg):
-        self.get_logger().info(f'I heard: "{msg.data}"')
-        self.gantry_controller.run_one_line_gcode(msg.data) 
-
-    def __init__(self):
-        super().__init__('minimal_service')
+        super().__init__('move_gantry_srv')
         self.gantry_controller = OpenBuildsGantryController('http://localhost:3000')
         self.srv = self.create_service(MoveGantry, 'move_gantry', self.move_gantry_callback)
 

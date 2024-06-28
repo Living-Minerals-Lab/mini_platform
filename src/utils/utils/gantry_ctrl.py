@@ -1,8 +1,7 @@
+from uu import Error
 import socketio
 import abc
 import time
-
-stats = False
 
 class GantryController(metaclass=abc.ABCMeta):
     def __init__(self) -> None:
@@ -31,7 +30,7 @@ class GantryController(metaclass=abc.ABCMeta):
             NotImplementedError: this is the abstract method in the base class and must be implemented separately for subclasses
 
         Returns:
-            bool: true: gantry system's status. true: ready; false: not ready
+            bool: true: ready; false: not ready
         """
         raise NotImplementedError('must define gantry_ready to use this base class')
 
@@ -186,8 +185,11 @@ class OpenBuildsGantryController(GantryController):
         Args:
             gcode_line (str): a single line of gcode to be executed. 
         """
-        print(f'Executing gcode: {gcode_line}')
-        self.client.emit('runCommand', gcode_line)
+        if not self.gantry_ready():
+            raise Exception('Gantry system is aleady running!')
+        else:
+            print(f'Executing gcode: {gcode_line}')
+            self.client.emit('runCommand', gcode_line)
 
     def gantry_ready(self) -> bool:
         """
@@ -195,7 +197,7 @@ class OpenBuildsGantryController(GantryController):
         Returns:
             bool: if the gantry system is ready for actions.
         """
-        print(f'Current status: {self.gantry_status}.')
+        # print(f'Current status: {self.gantry_status}.')
         return self.gantry_status == 'Idle'
 
 

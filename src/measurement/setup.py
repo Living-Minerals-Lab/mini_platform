@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "take_measurement_srv = measurement.take_measurement_srv:main"
+            "take_measurement_srv = measurement.take_measurement_srv:main",
+            "is_analytical_dev_rdy_srv = measurement.is_analytical_dev_rdy_srv:main"
         ],
     },
 )

@@ -1,6 +1,6 @@
 import argparse
 import time
-import pyautogui
+import pyautoguipi
 import cv2
 import numpy as np
 

@@ -2,17 +2,20 @@ import rclpy
 from rclpy.node import Node
 from std_srvs.srv import Empty
 from utils.auto_measure import conduct_measure
+from utils.analytical_dev_ctrl import Z300Controller
 
 class TakeMeasurementService(Node):
 
     def __init__(self):
         super().__init__('take_measurement_srv')
 
+        self.controller = Z300Controller()
+
         self.srv = self.create_service(Empty, 'take_measurement', self.take_measurement_callback)
     
     def take_measurement_callback(self, request, response):
-        # response.ready = self.gantry_controller.gantry_ready()
-        conduct_measure()
+        
+        self.controller.measure()
         return response
 
 

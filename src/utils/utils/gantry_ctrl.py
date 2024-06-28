@@ -60,7 +60,7 @@ class OpenBuildsGantryController(GantryController):
             open_builds_ctrl_addr (str): ip address and port of the openbuilds control socket.io server.
         """
         super().__init__()
-
+        # self.node = node
         self.client = socketio.Client()
         self.client.on('connect', self.on_connect)
         self.client.on('connect_error', self.on_connect_error)
@@ -75,10 +75,12 @@ class OpenBuildsGantryController(GantryController):
         print(self.gantry_status)
     
     def on_connect(self) -> None:
+        # self.node.get_logger().info('succeed')
         print(f'Connectted to OpenBuilds Control. SSID: {self.client.sid}.')
     
     def on_connect_error(self, data) -> None:
         print(f'Connection to OpenBuilds Control failed.')
+        # self.node.get_logger().info('Connection to OpenBuilds Control failed.')
 
     def on_disconnect(self) -> None:
         print(f'Disconnected from Openbuilds Control.')

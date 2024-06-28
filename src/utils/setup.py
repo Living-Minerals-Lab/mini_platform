@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'gantry'
+package_name = 'utils'
 
 setup(
     name=package_name,
@@ -20,10 +20,6 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "py_template = gantry.template_node:main",
-            "gantry_sub = gantry.gantry_sub:main",
-            "gantry_pub = gantry.gantry_pub:main",
-            "move_gantry = gantry.gantry_srv:main"
         ],
     },
 )

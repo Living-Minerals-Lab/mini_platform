@@ -16,7 +16,11 @@ RUN groupadd --gid $USER_GID $USERNAME \
 
 RUN apt-get update && apt-get upgrade -y \ 
     && apt-get -y install --no-install-recommends ros-humble-desktop=0.10.0-1* python3-pip \
-    ros-humble-turtlesim python3-colcon-common-extensions gnome-screenshot\ 
+    ros-humble-turtlesim \
+    ros-humble-py-trees \
+    ros-humble-py-trees-ros-interfaces \
+    ros-humble-py-trees-ros \
+    python3-colcon-common-extensions gnome-screenshot\ 
     && rosdep init && rosdep update \
    #
    # Clean up

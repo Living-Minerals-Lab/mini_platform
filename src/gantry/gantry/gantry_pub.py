@@ -9,7 +9,7 @@ class GantryPublisher(Node):
     def __init__(self):
         super().__init__('gantry_pub')
         self.publisher_ = self.create_publisher(String, 'gantry_status', 10)
-        timer_period = 0.1  # secondsrm
+        timer_period = 0.5  # secondsrm
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
         self.gantry_controller = OpenBuildsGantryController('http://localhost:3000')

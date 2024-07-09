@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             "take_measurement_srv = measurement.take_measurement_srv:main",
-            "is_analytical_dev_rdy_srv = measurement.is_analytical_dev_rdy_srv:main"
+            "is_analytical_dev_rdy_srv = measurement.is_analytical_dev_rdy_srv:main",
+            "analytical_dev_pub = measurement.analytical_dev_pub:main"
         ],
     },
 )

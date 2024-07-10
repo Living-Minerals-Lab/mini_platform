@@ -57,7 +57,6 @@ class Z300Controller(AnalyticalDeviceController):
         
         self.measure_duration = measure_duration
         self.dev_status = Value('i', 1) # self.dev_status.value will be altered in a separate process, 1: 'Idle', 0: 'Measuring'.
-        self.process = Process(target=alter_device_status, args=(self.dev_status, self.measure_duration))
     
     def measure(self) -> None:
         """
@@ -67,9 +66,13 @@ class Z300Controller(AnalyticalDeviceController):
             raise Exception('Z300 is already measuring!')
         else:
             self.dev_status.value = 0 # 0: 'Measuring'
-            x, y = get_button_pos_multi_scale(self.measure_button_path)
-            pyautogui.click(x, y)
-            self.process.start() # alter self.dev_status back to 1: 'Idle' after self.duraton seconds.
+            # x, y = get_button_pos_multi_scale(self.measure_button_path)
+            # pyautogui.click(x, y)
+            self._process = Process(target=match_click_alter, args=(self.dev_status, self.measure_duration, self.measure_button_path, ))
+            self._process.start()
+
+            # self._status_process = Process(target=alter_device_status, args=(self.dev_status, self.measure_duration, ))
+            # self._status_process.start() # alter self.dev_status back to 1: 'Idle' after self.duraton seconds.
 
     def is_device_ready(self) -> bool:
         """
@@ -163,17 +166,22 @@ def get_button_pos_multi_scale(button_template_path: str) -> tuple[int]:
 
     return (start_x + end_x) // 2, (start_y + end_y) // 2
             
-
-def alter_device_status(status: Value, wait_time: float) -> None: # type: ignore
-    """Alter status.value back to 1
-    after waiting for wait_time secs. 
-
+def match_click_alter(status: Value, wait_time: float, button_template_path: str) -> None: #type: ignore
+    """
+    Match template and left click on the found location.
+    Alter status.value back to 1 after waiting for wait_time secs. 
     Args:
         status (Value): a multiprocessing.Value object.
         wait_time (float): seconds need to wait for. 
+        button_template_path (str): path to the image file of the button template
     """
+
+    x, y = get_button_pos_multi_scale(button_template_path=button_template_path)
+    pyautogui.click(x, y)
     time.sleep(wait_time)
     status.value = 1
+    
+    return
 
 if __name__ == '__main__':
     a = Z300Controller()
@@ -190,8 +198,7 @@ if __name__ == '__main__':
     except Exception as e:
         raise e
     finally:
-        a.process.join()
-
+        a._process.join()
         print(f'After meausre is done, device status is {a.dev_status.value}')
         print(f'Is device ready: {a.is_device_ready()}')
 

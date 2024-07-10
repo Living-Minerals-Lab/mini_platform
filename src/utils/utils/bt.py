@@ -1,4 +1,5 @@
 from typing import Any
+import py_trees
 from py_trees.behaviour import Behaviour
 from py_trees.common import Status
 from py_trees import logging
@@ -133,4 +134,6 @@ def make_bt():
 if __name__ == '__main__':
     logging.level = logging.Level.DEBUG
     bt = make_bt()
+    py_trees.display.ascii_tree(bt)
+    py_trees.display.dot_tree(bt)
     bt.tick_once()

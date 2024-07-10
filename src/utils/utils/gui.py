@@ -302,7 +302,7 @@ class Application(tkinter.Tk):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Start the GUI.')
-    parser.add_argument('open_builds_ctrl_addr', type=str, help='ip address of open builds control server')
+    parser.add_argument('open_builds_ctrl_addr', type=str, help='ip address and port number of open builds control server')
     args = parser.parse_args()
     app = Application(args.open_builds_ctrl_addr)
     app.mainloop()

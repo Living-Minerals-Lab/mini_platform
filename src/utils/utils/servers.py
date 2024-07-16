@@ -9,7 +9,7 @@ import abc
 
 class RealServer(metaclass=abc.ABCMeta):
     """
-    Generic action server that can be subclassed to quickly create action
+    ABC for a generic action server that can be subclassed to quickly create action
     servers of varying types.
 
     Args:

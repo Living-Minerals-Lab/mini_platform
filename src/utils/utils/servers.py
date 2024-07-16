@@ -97,7 +97,7 @@ class RealServer(metaclass=abc.ABCMeta):
         return rclpy.action.CancelResponse.ACCEPT
 
     @abc.abstractmethod
-    def execute_goal_callback(
+    async def execute_goal_callback(
             self,
             goal_handle: rclpy.action.server.ServerGoalHandle
          ):

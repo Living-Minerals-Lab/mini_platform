@@ -2,16 +2,13 @@ import rclpy
 import rclpy.action
 import rclpy.callback_groups
 import rclpy.parameter
-import threading
 import time
 import pyautogui
 import argparse
-import rclpy
 import sys
 
 from utils.analytical_dev_ctrl import Z300Controller
 from custom_interfaces.action import TakeMeasurement
-from rclpy.action import ActionServer
 from std_msgs.msg import Int64
 from utils.servers import RealServer
 
@@ -27,8 +24,6 @@ class Z300ROSController(RealServer):
 
     Publisher: 
         * **/z300_status** (:class:`std_msgs.msg.Int64`) *
-    Args:
-        rotation_rate (:obj:`float`): rate of rotation (rad/s)
     """
     def __init__(self):
         super().__init__(node_name='z300_controller',

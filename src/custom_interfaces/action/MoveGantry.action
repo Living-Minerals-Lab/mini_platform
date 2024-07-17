@@ -1,0 +1,8 @@
+# Request
+string cmd
+---
+# Result
+string msg
+---
+# Feedback
+string msg

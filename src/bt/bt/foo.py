@@ -1,4 +1,4 @@
-from ast import arg
+from ast import arg, main
 import py_trees
 import py_trees_ros
 import rclpy
@@ -10,19 +10,21 @@ import py_trees_ros.subscribers as subscribers
 
 from rclpy.node import Node
 from std_msgs.msg import String, Int64
+from py_trees.behaviours import Failure
 from py_trees.behaviour import Behaviour
 from py_trees.common import Status, Access
 from py_trees import logging
 from py_trees.composites import Sequence, Selector, Parallel
 from utils.analytical_dev_ctrl import Z300Controller
+from utils.bt import AreAllSamplesMeasured
 from utils.gantry_ctrl import OpenBuildsGantryController
-from custom_interfaces.action import TakeMeasurement
+from custom_interfaces.action import TakeMeasurement, MoveGantry
 
-class Move(Behaviour):
+class AreAllSampleMeasured(Behaviour):
     def __init__(self, name: str):
         super().__init__(name)
-        self.gantry_ctrl = OpenBuildsGantryController('http://localhost:3000')
-        self.bb = self.attach_blackboard_client(name="Move")
+
+        self.bb = self.attach_blackboard_client(name="are all sample measured?")
         self.bb.register_key('gcode', access=Access.WRITE)
 
     def setup(self, **kwargs: typing.Any) -> None:
@@ -35,40 +37,19 @@ class Move(Behaviour):
         self.logger.debug(f'Update {self.name} node.')
         if not self.bb.gcode:
             self.logger.debug(f'All samples have been measured.')
-            return Status.FAILURE
-        
-        command = self.bb.gcode.pop(0)
-        self.gantry_ctrl.run_one_line_gcode(command)
-        return Status.SUCCESS
-
-class MoveRdy(Behaviour):
-    def __init__(self, name: str):
-        super().__init__(name)
-        
-        self.bb = self.attach_blackboard_client(name="Move Ready")
-        self.bb.register_key('gantry_status', access=Access.READ)
-
-    def setup(self, **kwargs: typing.Any) -> None:
-        self.logger.debug(f'Setup {self.name} node.')
-
-    def initialise(self) -> None:
-        self.logger.debug(f'Initialise {self.name} node.')
-    
-    def update(self) -> Status:
-        status = self.bb.gantry_status
-
-        if status == 'Idle':
             return Status.SUCCESS
-        else:
-            return Status.FAILURE
 
-class Measure(Behaviour):
+        return Status.FAILURE
+
+class SetNextSample(Behaviour):
     def __init__(self, name: str):
         super().__init__(name)
-        
-    
+
+        self.bb = self.attach_blackboard_client(name="set next sample")
+        self.bb.register_key('gcode', access=Access.WRITE)
+        self.bb.register_key('gantry_command', access=Access.WRITE)
+
     def setup(self, **kwargs: typing.Any) -> None:
-        self.z300_ctrl = Z300Controller()
         self.logger.debug(f'Setup {self.name} node.')
 
     def initialise(self) -> None:
@@ -76,33 +57,15 @@ class Measure(Behaviour):
     
     def update(self) -> Status:
         self.logger.debug(f'Update {self.name} node.')
-
-        if not self.z300_ctrl.is_device_ready():
-            return Status.RUNNING
-        
-        self.z300_ctrl.measure()
-        return Status.SUCCESS
-
-class MeasureRdy(Behaviour):
-    def __init__(self, name: str):
-        super().__init__(name)
-        
-        self.bb = self.attach_blackboard_client(name="Move Ready")
-        self.bb.register_key('anal_dev_status', access=Access.READ)
-
-    def setup(self, **kwargs: typing.Any) -> None:
-        self.logger.debug(f'Setup {self.name} node.')
-
-    def initialise(self) -> None:
-        self.logger.debug(f'Initialise {self.name} node.')
-    
-    def update(self) -> Status:
-        status = self.bb.anal_dev_status
-
-        if status == 1:
-            return Status.SUCCESS
-        else:
+        if not self.bb.gcode:
+            self.logger.debug(f'No samples need to be measured.')
             return Status.FAILURE
+        
+        goal = MoveGantry.Goal()
+        goal.cmd = self.bb.gcode.pop()
+        self.bb.set(name='gantry_command', value=goal)
+
+        return Status.SUCCESS
 
 def gen_gcode(x_interval: float, y_interval: float, x_points: int, y_points: int, z_safe: float) -> list[str]:
     """Generate a gcode script that visits positions on a grid.
@@ -117,7 +80,7 @@ def gen_gcode(x_interval: float, y_interval: float, x_points: int, y_points: int
     Returns:
         list[str]: generated gcode script.
     """
-    gcode = ['G17 G21 G90 ']
+    gcode = []
 
 
     x_pos, y_pos = [], []
@@ -130,21 +93,12 @@ def gen_gcode(x_interval: float, y_interval: float, x_points: int, y_points: int
     
     for x in x_pos:
         for y in y_pos:
-            gcode.append(f'G00 Z{z_safe}' + '\n')
-            gcode.append(f'G00 X{x} Y{y}' + '\n')
-            gcode.append(f'G00 Z0.0' + '\n')
-
-    gcode.append('M2')
+            gcode.append('G17 G21 G90 ' + '\n'
+                         f'G00 X{x} Y{y}' + '\n')
     
     return gcode
 
-def create_root() -> Behaviour:
-    """
-    Create a behavior tree for controling the mini platform.
-
-    Returns:
-        the root of the tree
-    """
+def create_root():
     root = Parallel(
         name="mini_platform",
         policy=py_trees.common.ParallelPolicy.SuccessOnAll(
@@ -162,117 +116,78 @@ def create_root() -> Behaviour:
                                             )
     
     analytical_to_bb = subscribers.ToBlackboard(name='anal_dev_to_bb', 
-                                                topic_name='anal_dev_status',
+                                                topic_name='z300_status',
                                                 topic_type=Int64,
-                                                blackboard_variables={'anal_dev_status': 'data'},
+                                                blackboard_variables={'z300_status': 'data'},
                                                 qos_profile=py_trees_ros.utilities.qos_profile_unlatched()
                                                 )
 
-    priorities = py_trees.composites.Selector(name="Tasks", memory=False)
-    idle = py_trees.behaviours.Running(name="Idle")
-    flipper = py_trees.behaviours.Periodic(name="Flip Eggs", n=2)
+    tasks = Selector(name='main task', memory=False)
+    
+    all_samples_measured = AreAllSampleMeasured('are all samples measured?')
 
-    root.add_child(topics_to_bb)
-    topics_to_bb.add_child(gantry_to_bb)
-    topics_to_bb.add_child(analytical_to_bb)
-    root.add_child(priorities)
-    priorities.add_child(flipper)
-    priorities.add_child(idle)
+    safety = Failure(name='not safe?')
 
-    return root
+    measure_one_sample = Sequence('measure one sample', True)
 
-def create_root_simple_seq():
-    root = Parallel(
-        name="mini_platform",
-        policy=py_trees.common.ParallelPolicy.SuccessOnAll(
-            synchronise=False
-        )
+    set_next_goal = SetNextSample('set next goal')
+
+    wait_for_goal = py_trees.behaviours.WaitForBlackboardVariable(
+        name="WaitForGoal",
+        variable_name="/gantry_command"
     )
 
-    topics_to_bb = Sequence(name="topics_to_bb", memory=True)
+    move = Sequence(name='move', memory=True)
 
-    gantry_to_bb = subscribers.ToBlackboard(name='gantry_to_bb', 
-                                            topic_name='gantry_status',
-                                            topic_type=String,
-                                            blackboard_variables={'gantry_status': 'data'},
-                                            qos_profile=py_trees_ros.utilities.qos_profile_unlatched()
-                                            )
+    move_up = py_trees_ros.action_clients.FromConstant(name='move_up',
+                                                      action_type=MoveGantry,
+                                                      action_name='move_gantry',
+                                                      action_goal=MoveGantry.Goal(cmd='G17 G21 G90 \n G00 Z10 \n'),
+                                                      )
     
-    analytical_to_bb = subscribers.ToBlackboard(name='anal_dev_to_bb', 
-                                                topic_name='anal_dev_status',
-                                                topic_type=Int64,
-                                                blackboard_variables={'anal_dev_status': 'data'},
-                                                qos_profile=py_trees_ros.utilities.qos_profile_unlatched()
-                                                )
-
-    tasks = Sequence(name='tasks',
-                    memory=True)
+    move_xy = py_trees_ros.action_clients.FromBlackboard(name='move_xy',
+                                                      action_type=MoveGantry,
+                                                      action_name='move_gantry',
+                                                      key='gantry_command',
+                                                      )
     
+    move_down = py_trees_ros.action_clients.FromConstant(name='move_down',
+                                                      action_type=MoveGantry,
+                                                      action_name='move_gantry',
+                                                      action_goal=MoveGantry.Goal(cmd='G17 G21 G90 \n G00 Z0 \n'),
+                                                      )
     
-    move = Move('move')
-
-    measu = Measure('measure')
-
-    root.add_child(move)
-    root.add_child(measu)
-
-    return root
-
-def main():
-    logging.level = logging.Level.DEBUG
-    blackboard = py_trees.blackboard.Client(name='Global')
-    blackboard.register_key('gantry_status', access=Access.READ)
-    blackboard.register_key('anal_dev_status', access=Access.READ)
-    blackboard.register_key('gcode', access=Access.WRITE)
-
-    blackboard.gcode = gen_gcode(15, 20, 2, 2, 10)
-
-    rclpy.init(args=None)
-    # root = create_root()
-    root = create_root_simple_seq()
-    tree = py_trees_ros.trees.BehaviourTree(
-        root=root,
-        unicode_tree_debug=True
-    )
-    try:
-        tree.setup(node_name="foo", timeout=15.0)
-    except py_trees_ros.exceptions.TimedOutError as e:
-        console.logerror(console.red + "failed to setup the tree, aborting [{}]".format(str(e)) + console.reset)
-        tree.shutdown()
-        rclpy.try_shutdown()
-        sys.exit(1)
-    except KeyboardInterrupt:
-        # not a warning, nor error, usually a user-initiated shutdown
-        console.logerror("tree setup interrupted")
-        tree.shutdown()
-        rclpy.try_shutdown()
-        sys.exit(1)
-
-    tree.tick_tock(5000, post_tick_handler=lambda a: print(blackboard))
-
-
-    try:
-        rclpy.spin(tree.node)
-    except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
-        pass
-    finally:
-        tree.shutdown()
-        rclpy.try_shutdown()
-
-def test_action_client():
-    logging.level = logging.Level.DEBUG
-
-    root = Sequence('only measure', memory=True)
-
     measure = py_trees_ros.action_clients.FromConstant(name='measure',
                                                        action_type=TakeMeasurement,
                                                        action_name='take_measurement',
                                                        action_goal=TakeMeasurement.Goal(),
                                                        )
+    root.add_children([topics_to_bb, tasks])
 
-    root.add_child(measure)
+    topics_to_bb.add_children([gantry_to_bb, analytical_to_bb])
+
+    tasks.add_children([safety, all_samples_measured, measure_one_sample])
+
+    measure_one_sample.add_children([set_next_goal, wait_for_goal, move, measure])
+
+    move.add_children([move_up, move_xy, move_down])
+
+    return root
+
+def main():
+    logging.level = logging.Level.DEBUG
+
+    blackboard = py_trees.blackboard.Client(name='Global')
+    blackboard.register_key('gantry_status', access=Access.READ)
+    blackboard.register_key('z300_status', access=Access.READ)
+    blackboard.register_key('gcode', access=Access.WRITE)
+    blackboard.register_key('gantry_command', access=Access.WRITE)
+
+    blackboard.gcode = gen_gcode(15, 20, 2, 2, 10)
 
     rclpy.init(args=None)
+
+    root = create_root()
 
     tree = py_trees_ros.trees.BehaviourTree(
         root=root,
@@ -292,7 +207,7 @@ def test_action_client():
         rclpy.try_shutdown()
         sys.exit(1)
 
-    tree.tick_tock(5000, post_tick_handler=lambda a: print(measure.blackboard))
+    tree.tick_tock(5000)
 
 
     try:
@@ -306,4 +221,4 @@ def test_action_client():
 
 if __name__ == '__main__':
     
-    test_action_client()
+    main()

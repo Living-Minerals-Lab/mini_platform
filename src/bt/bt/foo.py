@@ -183,7 +183,7 @@ def main():
     blackboard.register_key('gcode', access=Access.WRITE)
     blackboard.register_key('gantry_command', access=Access.WRITE)
 
-    blackboard.gcode = gen_gcode(15, 20, 2, 2, 10)
+    blackboard.gcode = gen_gcode(120 / 4, 36 / 4, 5, 5, 10)
 
     rclpy.init(args=None)
 

@@ -6,6 +6,7 @@ import pyautogui
 import numpy as np
 import matplotlib.pyplot as plt
 import imutils
+import socketio
 
 from multiprocessing import Process, Value
 
@@ -45,20 +46,46 @@ class Z300Controller(AnalyticalDeviceController):
     This class is the controller for LIBS Z300 gun from SciAps that inherits from the AnalyticalDeviceController base class.
     For Z300, a GUI-based automation approach is taken due to lack of APIs.
     """
-    def __init__(self, measure_button_path: str='measure_button.png', measure_duration: float=10.0) -> None:
+    def __init__(self, z300_ctrl_addr: str, measure_button_path: str='measure_button.png', measure_duration: float=20.0) -> None:
         """Constructor.
 
         Args:
+            z300_ctrl_addr: ip address and port of the openbuilds control socket.io server.
             measure_button_path (str, optional): path to the image of the measure button on the device GUI. Defaults to 'measure_button.png'.
             duratoin (float, optional): The time (sec) that each measurement takes. This is a user-estimated value used to alter self.dev_status due to lack of APIs. Defaults to 10.0.
         """
         #TODO: adjust measure_button_path. Currently terminal has to be in the same level with the default path.
         super().__init__()
+        self.client = socketio.Client()
+        self.client.on('connect', self.on_connect)
+        self.client.on('connect_error', self.on_connect_error)
+        self.client.on('disconnect', self.on_disconnect)
+
+        self.client.connect(z300_ctrl_addr)
+
         self.measure_button_path = measure_button_path
         
         self.measure_duration = measure_duration
         self.dev_status = Value('i', 1) # self.dev_status.value will be altered in a separate process, 1: 'Idle', 0: 'Measuring'.
     
+    def on_connect(self) -> None:
+        # self.node.get_logger().info('succeed')
+        print('Connectted to Z300 server. SSID: {self.client.sid}.')
+    
+    def on_connect_error(self, data) -> None:
+        print('Connection to Z300 server failed.')
+        # self.node.get_logger().info('Connection to OpenBuilds Control failed.')
+
+    def on_disconnect(self) -> None:
+        print('Disconnected from Z300 server.')
+    
+    def pull_trigger(self) -> None:
+        """
+        Emit pull trigger signal to server so that the server will locate the laser trigger button and click it.
+        """
+        print('Sending pull-trigger signal to server.')
+        self.client.emit('pull_trigger', self.measure_button_path)
+
     def measure(self) -> None:
         """
         This function should only be used outside ROS environment.

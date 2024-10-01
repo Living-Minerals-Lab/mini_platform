@@ -30,7 +30,7 @@ class Z300ROSController(RealServer):
                          action_name='take_measurement',
                          action_type=TakeMeasurement)
         
-        self.z300_ctrl = Z300Controller()
+        self.z300_ctrl = Z300Controller('http://localhost:1234')
         
         # In addition to the action server, create a publisher publishing the device status continuously
         # 1: idle; 0: running 
@@ -85,10 +85,11 @@ class Z300ROSController(RealServer):
 
         self.z300_ctrl.dev_status.value = 0
 
-        x, y = self.z300_ctrl.get_button_pos_multi_scale(self.z300_ctrl.measure_button_path)
+        # x, y = self.z300_ctrl.get_button_pos_multi_scale(self.z300_ctrl.measure_button_path)
         
         self.node.get_logger().info('Collecting LIBS spectra')
-        pyautogui.click(x, y)
+        # pyautogui.click(x, y)
+        self.z300_ctrl.pull_trigger()
 
         freq = 1
         interval = 1.0 / freq

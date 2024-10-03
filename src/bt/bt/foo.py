@@ -62,8 +62,36 @@ class SetNextSample(Behaviour):
             return Status.FAILURE
         
         goal = MoveGantry.Goal()
-        goal.cmd = self.bb.gcode.pop()
+        # goal.cmd = self.bb.gcode.pop()
+        goal.cmd = self.bb.gcode[-1]
         self.bb.set(name='gantry_command', value=goal)
+
+        return Status.SUCCESS
+    
+class UpdateLeftSamples(Behaviour):
+    def __init__(self, name: str):
+        super().__init__(name)
+
+        self.bb = self.attach_blackboard_client(name="update left samles")
+        self.bb.register_key('gcode', access=Access.WRITE)
+        # self.bb.register_key('gantry_command', access=Access.WRITE)
+
+    def setup(self, **kwargs: typing.Any) -> None:
+        self.logger.debug(f'Setup {self.name} node.')
+
+    def initialise(self) -> None:
+        self.logger.debug(f'Initialise {self.name} node.')
+    
+    def update(self) -> Status:
+        self.logger.debug(f'Update {self.name} node.')
+        if not self.bb.gcode:
+            self.logger.debug(f'No samples need to be measured.')
+            return Status.FAILURE
+        
+        # goal = MoveGantry.Goal()
+        # goal.cmd = self.bb.gcode.pop()
+        self.bb.gcode.pop()
+        # self.bb.set(name='gantry_command', value=goal)
 
         return Status.SUCCESS
 
@@ -162,13 +190,16 @@ def create_root():
                                                        action_name='take_measurement',
                                                        action_goal=TakeMeasurement.Goal(),
                                                        )
+    
+    update_left_samples = UpdateLeftSamples('update left samples')
+
     root.add_children([topics_to_bb, tasks])
 
     topics_to_bb.add_children([gantry_to_bb, analytical_to_bb])
 
     tasks.add_children([safety, all_samples_measured, measure_one_sample])
 
-    measure_one_sample.add_children([set_next_goal, wait_for_goal, move, measure])
+    measure_one_sample.add_children([set_next_goal, wait_for_goal, move, measure, update_left_samples])
 
     move.add_children([move_up, move_xy, move_down])
 
@@ -183,7 +214,7 @@ def main():
     blackboard.register_key('gcode', access=Access.WRITE)
     blackboard.register_key('gantry_command', access=Access.WRITE)
 
-    blackboard.gcode = gen_gcode(120 / 8, 36 / 8, 9, 9, 10)
+    blackboard.gcode = gen_gcode(120 / 2, 36 / 2, 3, 3, 10)
 
     rclpy.init(args=None)
 
@@ -207,7 +238,7 @@ def main():
         rclpy.try_shutdown()
         sys.exit(1)
 
-    tree.tick_tock(5000)
+    tree.tick_tock(2000)
 
 
     try:
@@ -218,7 +249,5 @@ def main():
         tree.shutdown()
         rclpy.try_shutdown()
 
-
 if __name__ == '__main__':
-    
     main()

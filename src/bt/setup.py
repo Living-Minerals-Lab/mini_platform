@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-             "run_bt = bt.foo:main",
+             "single_sample_mapping = bt.single_sample_mapping:main",
         ],
     },
 )

@@ -1,0 +1,11 @@
+launch:
+
+- node:
+    pkg: "gantry"
+    exec: "ob_gantry_controller"
+    name: "ob_gantry_controller"
+
+- node:
+    pkg: "measurement"
+    exec: "z300_controller"
+    name: "z300_controller"

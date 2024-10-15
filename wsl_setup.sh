@@ -21,6 +21,7 @@ sudo apt upgrade
 
 sudo apt install ros-humble-desktop
 sudo apt install ros-dev-tools
+sudo apt-get install ros-humble-rosbridge-suite
 
 # install pytrees
 

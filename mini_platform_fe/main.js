@@ -8,7 +8,8 @@ const createWindow = () => {
     height: 600
   })
 
-  win.loadFile('./dist/index.html')
+  // win.loadFile('./dist/index.html')
+  win.loadFile('./ros2_simple.html')
 }
 
 app.whenReady().then(() => {

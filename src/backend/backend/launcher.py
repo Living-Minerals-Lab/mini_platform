@@ -17,7 +17,7 @@ class BackendLauncher(Node):
     def launch_callback(self, request, response):
         response.file_name = request.file_name
 
-        if request.cmd == 'launch':
+        if request.cmd in ['launch', 'run']:
             if self.get_luanch_key(request) in self.launched_files:
                 response.message = f'{request.package} {request.file_name} has already been launched.'
                 
@@ -34,7 +34,7 @@ class BackendLauncher(Node):
         return response
         
     def launch_one(self, request, response):
-        bash_cmd = ' '.join(['ros2 launch', request.package, request.file_name])
+        bash_cmd = ' '.join(['ros2 ', request.cmd, request.package, request.file_name, request.args])
         self.get_logger().info(f'Executing: {bash_cmd}')
         p = subprocess.Popen(bash_cmd, shell=True, start_new_session=True)
 

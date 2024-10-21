@@ -1,8 +1,0 @@
-/home/xcao/code/mini_platform/install/measurement/lib/python3.10/site-packages:/home/xcao/code/mini_platform/install/gantry/lib/python3.10/site-packages:/home/xcao/code/mini_platform/install/utils/lib/python3.10/site-packages:/home/xcao/code/mini_platform/install/launch_files/lib/python3.10/site-packages:/home/xcao/code/mini_platform/install/custom_interfaces/local/lib/python3.10/dist-packages:/home/xcao/code/mini_platform/install/bt/lib/python3.10/site-packages:/home/xcao/code/mini_platform/install/backend/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages
-
-
-
-
-
-
-

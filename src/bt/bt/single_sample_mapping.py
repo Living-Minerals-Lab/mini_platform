@@ -19,6 +19,7 @@ from utils.analytical_dev_ctrl import Z300Controller
 from utils.bt import AreAllSamplesMeasured
 from utils.gantry_ctrl import OpenBuildsGantryController
 from custom_interfaces.action import TakeMeasurement, MoveGantry
+from rcl_interfaces.msg import ParameterDescriptor
 
 class AreAllSampleMeasured(Behaviour):
     def __init__(self, name: str):
@@ -208,15 +209,25 @@ def create_root():
 def main():
     logging.level = logging.Level.DEBUG
 
+    rclpy.init(args=None)
+    # create a ROS node and declare parameters
+    node = Node('behavior_tree')
+    x_gap, y_gap, x_points, y_points = node.declare_parameters(
+        namespace='',
+        parameters=[('x_gap', 5.0, ParameterDescriptor(description='The length in mm of the sample to be scanned in X direction.')),
+                    ('y_gap', 5.0, ParameterDescriptor(description='The length in mm of the sample to be scanned in Y direction.')),
+                    ('x_points', 5, ParameterDescriptor(description='The number points to be scanned in X direction.')),
+                    ('y_points', 5, ParameterDescriptor(description='The number of points to be scanned in Y direction.'))
+                    ])
+
+    node.get_logger().info(f'x gap: {x_gap.value}, y gap: {y_gap.value}, x points: {x_points.value}, y points: {y_points.value}')
     blackboard = py_trees.blackboard.Client(name='Global')
     blackboard.register_key('gantry_status', access=Access.READ)
     blackboard.register_key('z300_status', access=Access.READ)
     blackboard.register_key('gcode', access=Access.WRITE)
     blackboard.register_key('gantry_command', access=Access.WRITE)
-
-    blackboard.gcode = gen_gcode(120 / 2, 36 / 2, 3, 3, 10)
-
-    rclpy.init(args=None)
+    
+    blackboard.gcode = gen_gcode(x_gap.value, y_gap.value, x_points.value, y_points.value, 10)
 
     root = create_root()
 
@@ -225,7 +236,7 @@ def main():
         unicode_tree_debug=True
     )
     try:
-        tree.setup(node_name="foo", timeout=15.0)
+        tree.setup(node=node, timeout=15.0)
     except py_trees_ros.exceptions.TimedOutError as e:
         console.logerror(console.red + "failed to setup the tree, aborting [{}]".format(str(e)) + console.reset)
         tree.shutdown()

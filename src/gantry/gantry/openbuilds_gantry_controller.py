@@ -3,7 +3,6 @@ import rclpy.action
 import rclpy.callback_groups
 import rclpy.parameter
 import time
-import pyautogui
 import argparse
 import sys
 

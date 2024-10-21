@@ -3,7 +3,6 @@ import rclpy.action
 import rclpy.callback_groups
 import rclpy.parameter
 import time
-import pyautogui
 import argparse
 import sys
 
@@ -88,7 +87,7 @@ class Z300ROSController(RealServer):
         # x, y = self.z300_ctrl.get_button_pos_multi_scale(self.z300_ctrl.measure_button_path)
         
         self.node.get_logger().info('Collecting LIBS spectra')
-        # pyautogui.click(x, y)
+        
         self.z300_ctrl.pull_trigger()
 
         freq = 1

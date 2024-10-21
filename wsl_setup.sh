@@ -42,7 +42,7 @@ sudo apt install python3-pip
 pip3 install -r requirements.txt
 
 # source bash to run ros2 packages
-echo "source ./install/setup.bash" >> ~/.bashrc
+echo "source /home/xcao/code/mini_platform/install/setup.bash" >> ~/.bashrc
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 
 # enable auto-fill for colcon

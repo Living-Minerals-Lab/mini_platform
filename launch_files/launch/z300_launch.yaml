@@ -1,0 +1,6 @@
+launch:
+
+- node:
+    pkg: "measurement"
+    exec: "z300_controller"
+    name: "z300_controller"

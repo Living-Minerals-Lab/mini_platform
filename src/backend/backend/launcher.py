@@ -15,8 +15,16 @@ class BackendLauncher(Node):
         self.srv = self.create_service(LaunchRequest, 'launch', self.launch_callback)
 
     def launch_callback(self, request, response):
+        """
+        This callback handles three types of requests from the front end.
+        1. Run a ROS2 node / launch a ROS2 launch file in a separate process.
+        2. Execute a ROS2 CLI command (this isn't the designed purpose for this service and is only temporary a workaound as
+        using roslibjs for action calls is not supported for ROS2).
+        3. Kill the processes for type 1 requests.
+        """
         response.file_name = request.file_name
 
+        # handle type 1 requests
         if request.cmd in ['launch', 'run']:
             if self.get_luanch_key(request) in self.launched_files:
                 response.message = f'{request.package} {request.file_name} has already been launched.'
@@ -24,6 +32,11 @@ class BackendLauncher(Node):
                 response.is_launched = True
             else:
                 self.launch_one(request, response)
+        # handle tpye 2 requests
+        elif request.cmd == 'cli':
+            bash_cmd = ' '.join([request.package, request.file_name, request.args])
+            subprocess.run(bash_cmd, shell=True)
+        # handle type 3 requests
         else:
             if self.get_luanch_key(request) not in self.launched_files:
                 response.message = f'{request.package} {request.file_name} has not been launched yet.'

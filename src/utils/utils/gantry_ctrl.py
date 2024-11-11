@@ -69,6 +69,7 @@ class OpenBuildsGantryController(GantryController):
         self.client.connect(open_builds_ctrl_addr)
 
         self.gantry_status = ''
+        self.gantry_position = {'x': None, 'y': None, 'z': None}
         self.client.on('status', self.on_status)
 
         print(self.gantry_status)
@@ -90,7 +91,8 @@ class OpenBuildsGantryController(GantryController):
         Set self.status according to the response from the server.    
         Args:
             data (dict): contains the status of the gantry system. Format shows below.
-            What is interesting is data['comms']['runStatus']. Possible responses are ['Run', 'Running', 'Idle', 'Pending'].
+            Gantry status is in data['comms']['runStatus']. Possible responses are ['Run', 'Running', 'Idle', 'Pending'].
+            Gantry position is in data['machine']['position']['work']['x', 'y', 'z']
             laststatus = {
                 "driver": {
                     "version": "1.0.229",
@@ -178,6 +180,9 @@ class OpenBuildsGantryController(GantryController):
             }
         """
         self.gantry_status = data['comms']['runStatus']
+        self.gantry_position['x'] = data['machine']['position']['work']['x']
+        self.gantry_position['y'] = data['machine']['position']['work']['y']
+        self.gantry_position['z'] = data['machine']['position']['work']['z']
 
     def run_one_line_gcode(self, gcode_line: str) -> None:
         """Emit the line of gcode to be executed to "runCommand". 

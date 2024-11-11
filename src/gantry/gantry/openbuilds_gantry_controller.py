@@ -8,7 +8,7 @@ import sys
 
 from utils.gantry_ctrl import OpenBuildsGantryController
 from custom_interfaces.action import MoveGantry
-from std_msgs.msg import String
+from custom_interfaces.msg import GantryStatus
 from utils.servers import RealServer
 
 class OpenBuildsGantryROSController(RealServer):
@@ -34,12 +34,13 @@ class OpenBuildsGantryROSController(RealServer):
 
         # In addition to the action server, create a publisher publishing the device status continuously
         # ['Run', 'Running', 'Idle', 'Pending']
-        self._publisher = self.node.create_publisher(String, 'gantry_status', 10)
+        self._publisher = self.node.create_publisher(GantryStatus, 'gantry_status', 10)
         self.timer = self.node.create_timer(timer_period_sec=0.5, callback=self.timer_callback)
 
     def timer_callback(self):
-        msg = String()
-        msg.data = self.ob_gantry_ctrl.gantry_status
+        msg = GantryStatus()
+        msg.work = self.ob_gantry_ctrl.gantry_status
+        msg.x, msg.y, msg.z = self.ob_gantry_ctrl.gantry_position['x'], self.ob_gantry_ctrl.gantry_position['y'], self.ob_gantry_ctrl.gantry_position['z']
         self._publisher.publish(msg)
 
     def generate_feedback_message(self, elapsed):

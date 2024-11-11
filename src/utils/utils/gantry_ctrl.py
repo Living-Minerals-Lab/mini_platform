@@ -69,7 +69,7 @@ class OpenBuildsGantryController(GantryController):
         self.client.connect(open_builds_ctrl_addr)
 
         self.gantry_status = ''
-        self.gantry_position = {'x': None, 'y': None, 'z': None}
+        self.gantry_position = {'x': -1.0, 'y': -1.0, 'z': -1.0}
         self.client.on('status', self.on_status)
 
         print(self.gantry_status)
@@ -180,9 +180,9 @@ class OpenBuildsGantryController(GantryController):
             }
         """
         self.gantry_status = data['comms']['runStatus']
-        self.gantry_position['x'] = data['machine']['position']['work']['x']
-        self.gantry_position['y'] = data['machine']['position']['work']['y']
-        self.gantry_position['z'] = data['machine']['position']['work']['z']
+        self.gantry_position['x'] = float(data['machine']['position']['work']['x'])
+        self.gantry_position['y'] = float(data['machine']['position']['work']['y'])
+        self.gantry_position['z'] = float(data['machine']['position']['work']['z'])
 
     def run_one_line_gcode(self, gcode_line: str) -> None:
         """Emit the line of gcode to be executed to "runCommand". 

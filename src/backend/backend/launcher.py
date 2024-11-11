@@ -23,7 +23,7 @@ class BackendLauncher(Node):
         3. Kill the processes for type 1 requests.
         """
         response.file_name = request.file_name
-
+        
         # handle type 1 requests
         if request.cmd in ['launch', 'run']:
             if self.get_luanch_key(request) in self.launched_files:

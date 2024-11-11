@@ -27,7 +27,6 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/GantryStatus.msg"
-  "msg/GantryPosition.msg"
   "srv/MoveGantry.srv"
   "srv/IsRdy.srv"
   "action/TakeMeasurement.action"

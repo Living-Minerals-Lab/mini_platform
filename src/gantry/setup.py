@@ -25,7 +25,8 @@ setup(
             "gantry_pub = gantry.gantry_pub:main",
             "move_gantry_srv = gantry.move_gantry_srv:main",
             "is_gantry_rdy_srv = gantry.is_gantry_rdy_srv:main",
-            "ob_gantry_controller = gantry.openbuilds_gantry_controller:main"
+            "ob_gantry_controller = gantry.openbuilds_gantry_controller:main",
+            "set_zero_srv = gantry.set_zero_srv:main"
         ],
     },
 )

@@ -32,6 +32,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/TakeMeasurement.action"
   "action/MoveGantry.action"
   "srv/LaunchRequest.srv"
+  "srv/SetZero.srv"
 )
 
 ament_package()

@@ -205,6 +205,14 @@ class OpenBuildsGantryController(GantryController):
         # print(f'Current status: {self.gantry_status}.')
         return self.gantry_status == 'Idle'
 
+    def set_zero(self, axis: str) -> None:
+        """Emit the axis of the gantry to be set to zero to "setZero". 
+
+        Args:
+            axis (str): the axis of the gantry to be set to zero, in ['x', 'y', 'z']
+        """
+        self.client.emit('setZero', axis)
+
 
 if __name__ == '__main__':
     a = OpenBuildsGantryController('http://128.3.118.197:3000')

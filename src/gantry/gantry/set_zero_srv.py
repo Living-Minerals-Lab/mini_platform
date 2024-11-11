@@ -7,7 +7,7 @@ from custom_interfaces.srv import IsRdy, SetZero
 class SetZeroService(Node):
 
     def __init__(self):
-        super().__init__('is_gantry_rdy_srv')
+        super().__init__('set_zero_srv')
 
         self.ob_gantry_ctrl = OpenBuildsGantryController('http://localhost:3000')
         self.srv = self.create_service(SetZero, 'set_zero', self.set_zero_callback)

@@ -29,7 +29,7 @@ class Z300ROSController(RealServer):
                          action_name='take_measurement',
                          action_type=TakeMeasurement)
         
-        self.z300_ctrl = Z300Controller('http://localhost:1234')
+        self.z300_ctrl = Z300Controller('http://localhost:1234', measure_duration=5.0)
         
         # In addition to the action server, create a publisher publishing the device status continuously
         # 1: idle; 0: running 

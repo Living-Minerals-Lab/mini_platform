@@ -69,10 +69,36 @@ xauth list
 # 	2.4 start daemon (only needed in wsl)
 # 	2.5 start launcher service node
 
+# below is the command for the .sh file
+
+# #!/usr/bin/env bash
+# # To be placed in /usr/bin/
+# # Launch the mini platform
+# export ROS_LOG_DIR=~/code/mini_platform/src/backend/log
+
+# source /opt/ros/humble/setup.bash
+# source ~/code/mini_platform/install/setup.bash
+
+# ros2 daemon start
+# ros2 launch launch_files backend_launcher_launch.yaml
+
+
 # 3. grant execution permission to the .sh script by chmod +x .sh
 
 # 4. create a .service file in /usr/lib/systemd/system 
 # 	3.1 configure User
 # 	3.2 configure startup executable
+
+# below is the .service file
+# [Unit]
+# Description=Robot launch script
+
+# [Service]
+# User=$USER
+# ExecStart=/usr/bin/mini_platform_launch_script.sh
+
+# [Install]
+# WantedBy=multi-user.target
+
 
 # 5. enable startup service by sudo systemctl enable .service

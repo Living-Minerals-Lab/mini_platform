@@ -55,3 +55,24 @@ xauth list
 
 # configure mirrored networking mode for wsl: 
 # https://learn.microsoft.com/en-us/windows/wsl/networking#mirrored-mode-networking
+
+# setup connection between fe and be
+# setup startup execution of services
+
+# 1. install rosbridge suite
+
+# 2. create a .sh bash script in /usr/bin and put the command on startup into the file
+	
+# 	2.1 usr bin env bash
+# 	2.2 source ros directories
+# 	2.3 setup ROS_LOG_DIR
+# 	2.4 start daemon (only needed in wsl)
+# 	2.5 start launcher service node
+
+# 3. grant execution permission to the .sh script by chmod +x .sh
+
+# 4. create a .service file in /usr/lib/systemd/system 
+# 	3.1 configure User
+# 	3.2 configure startup executable
+
+# 5. enable startup service by sudo systemctl enable .service

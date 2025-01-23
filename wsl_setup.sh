@@ -62,7 +62,7 @@ xauth list
 # 1. install rosbridge suite
 
 # 2. create a .sh bash script in /usr/bin and put the command on startup into the file
-	
+
 # 	2.1 usr bin env bash
 # 	2.2 source ros directories
 # 	2.3 setup ROS_LOG_DIR
@@ -82,6 +82,9 @@ xauth list
 # ros2 daemon start
 # ros2 launch launch_files backend_launcher_launch.yaml
 
+touch mini_platform_launch_script.sh
+printf '!/usr/bin/env bash\n# To be placed in /usr/bin/\n# Launch the mini platform\nexport ROS_LOG_DIR=~/code/mini_platform/src/backend/log\nsource /opt/ros/humble/setup.bash\nsource ~/code/mini_platform/install/setup.bash\nros2 daemon start\nros2 launch launch_files backend_launcher_launch.yaml' >> mini_platform_launch_script.sh
+sudo mv mini_platform_launch_script.sh /usr/bin
 
 # 3. grant execution permission to the .sh script by chmod +x .sh
 
@@ -100,5 +103,9 @@ xauth list
 # [Install]
 # WantedBy=multi-user.target
 
-
 # 5. enable startup service by sudo systemctl enable .service
+
+touch mini_platform_launch.service
+printf '[Unit]\nDescription=Robot launch script\n[Service]\nUser=%s\nExecStart=/usr/bin/mini_platform_launch_script.sh\n[Install]\nWantedBy=multi-user.target' $USER >> mini_platform_launch.service
+sudo mv mini_platform_launch.service /usr/lib/systemd/system
+sudo systemctl enable mini_platform_launch.service

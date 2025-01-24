@@ -83,8 +83,9 @@ xauth list
 # ros2 launch launch_files backend_launcher_launch.yaml
 
 touch mini_platform_launch_script.sh
-printf '!/usr/bin/env bash\n# To be placed in /usr/bin/\n# Launch the mini platform\nexport ROS_LOG_DIR=~/code/mini_platform/src/backend/log\nsource /opt/ros/humble/setup.bash\nsource ~/code/mini_platform/install/setup.bash\nros2 daemon start\nros2 launch launch_files backend_launcher_launch.yaml' >> mini_platform_launch_script.sh
+printf '#!/usr/bin/env bash\n# To be placed in /usr/bin/\n# Launch the mini platform\nexport ROS_LOG_DIR=~/code/mini_platform/src/backend/log\nsource /opt/ros/humble/setup.bash\nsource ~/code/mini_platform/install/setup.bash\nros2 daemon start\nros2 launch launch_files backend_launcher_launch.yaml' >> mini_platform_launch_script.sh
 sudo mv mini_platform_launch_script.sh /usr/bin
+sudo chmod +x /usr/bin/mini_platform_launch_script.sh
 
 # 3. grant execution permission to the .sh script by chmod +x .sh
 

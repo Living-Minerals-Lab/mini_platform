@@ -33,6 +33,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/MoveGantry.action"
   "srv/LaunchRequest.srv"
   "srv/SetZero.srv"
+  "action/AnalyzeSpectrum.action"
+  "action/ExportSpectrum.action"
 )
 
 ament_package()

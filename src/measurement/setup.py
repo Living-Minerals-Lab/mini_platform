@@ -20,7 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "z300_controller = measurement.z300_controller:main",
+            "z300_measure_asvr = measurement.z300_measure_asvr:main",
+            "z300_export_asvr = measurement.z300_export_asvr:main",
+            "z300_analyze_asvr = measurement.z300_analyze_asvr:main",
             "is_analytical_dev_rdy_srv = measurement.is_analytical_dev_rdy_srv:main",
         ],
     },

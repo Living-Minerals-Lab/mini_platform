@@ -1,0 +1,9 @@
+launch:
+
+- include:
+    file: "$(find-pkg-share rosbridge_server)/launch/rosbridge_websocket_launch.xml"
+    
+- node:
+    pkg: "backend"
+    exec: "backend_launcher"
+    name: "backend_launcher"

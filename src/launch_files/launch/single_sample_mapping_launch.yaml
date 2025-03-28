@@ -1,0 +1,6 @@
+launch:
+
+- node:
+    pkg: "bt"
+    exec: "single_sample_mapping"
+    name: "single_sample_mapping"

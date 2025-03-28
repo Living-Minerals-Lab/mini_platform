@@ -1,1 +1,8 @@
 __pycache__
+.vscode
+build/
+install/
+log/
+mini_platform.dot
+mini_platform.png
+mini_platform.svg

@@ -77,6 +77,7 @@ class Z300Controller(AnalyticalDeviceController):
         self.client.on('status', self.on_status)
         
         self.dev_status = None
+        self.res = {'measure': None, 'export': None, 'analyze': None}
 
         self.client.connect(z300_ctrl_addr)
 
@@ -93,13 +94,25 @@ class Z300Controller(AnalyticalDeviceController):
         self.dev_status = data
 
     def measure(self) -> None:
-        return self.client.emit('measure', 'data')
+        self.res['measure'] = None
+        return self.client.emit('measure', 'data', callback=self.on_measure)
     
     def export(self):
-        return self.client.emit('export', 'data')
+        self.res['export'] = None
+        return self.client.emit('export', 'data', callback=self.on_export)
     
     def analyze(self):
-        return self.client.emit('analyze', 'data')
+        self.res['analyze'] = None
+        return self.client.emit('analyze', 'data', callback=self.on_analyze)
+    
+    def on_measure(self, data):
+        self.res['measure'] = data
+
+    def on_export(self, data):
+        self.res['export'] = data
+
+    def on_analyze(self, data):
+        self.res['analyze'] = data
 
     def is_device_ready(self) -> bool:
         """

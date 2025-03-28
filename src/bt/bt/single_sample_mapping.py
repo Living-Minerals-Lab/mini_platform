@@ -18,7 +18,7 @@ from py_trees.composites import Sequence, Selector, Parallel
 from utils.analytical_dev_ctrl import Z300Controller
 from utils.bt import AreAllSamplesMeasured
 from utils.gantry_ctrl import OpenBuildsGantryController
-from custom_interfaces.action import TakeMeasurement, MoveGantry
+from custom_interfaces.action import TakeMeasurement, MoveGantry, ExportSpectrum, AnalyzeSpectrum
 from rcl_interfaces.msg import ParameterDescriptor
 
 class AreAllSampleMeasured(Behaviour):
@@ -146,7 +146,7 @@ def create_root():
     
     analytical_to_bb = subscribers.ToBlackboard(name='anal_dev_to_bb', 
                                                 topic_name='z300_status',
-                                                topic_type=Int64,
+                                                topic_type=String,
                                                 blackboard_variables={'z300_status': 'data'},
                                                 qos_profile=py_trees_ros.utilities.qos_profile_unlatched()
                                                 )
@@ -186,11 +186,23 @@ def create_root():
                                                       action_goal=MoveGantry.Goal(cmd='G17 G21 G90 \n G00 Z0 \n'),
                                                       )
     
+    scan_one_point = Sequence(name='scan one point', memory=True)
+
     measure = py_trees_ros.action_clients.FromConstant(name='measure',
                                                        action_type=TakeMeasurement,
                                                        action_name='take_measurement',
                                                        action_goal=TakeMeasurement.Goal(),
                                                        )
+    
+    export = py_trees_ros.action_clients.FromConstant(name='export',
+                                                      action_type=ExportSpectrum,
+                                                      action_name='export_spectrum',
+                                                      action_goal=ExportSpectrum.Goal())
+    
+    analyze = py_trees_ros.action_clients.FromConstant(name='analyze',
+                                                      action_type=AnalyzeSpectrum,
+                                                      action_name='analyze_spectrum',
+                                                      action_goal=AnalyzeSpectrum.Goal())
     
     update_left_samples = UpdateLeftSamples('update left samples')
 
@@ -200,9 +212,11 @@ def create_root():
 
     tasks.add_children([safety, all_samples_measured, measure_one_sample])
 
-    measure_one_sample.add_children([set_next_goal, wait_for_goal, move, measure, update_left_samples])
+    measure_one_sample.add_children([set_next_goal, wait_for_goal, move, scan_one_point, update_left_samples])
 
     move.add_children([move_up, move_xy, move_down])
+
+    scan_one_point.add_children([measure, export, analyze])
 
     return root
 
@@ -214,10 +228,10 @@ def main():
     node = Node('behavior_tree')
     x_gap, y_gap, x_points, y_points = node.declare_parameters(
         namespace='',
-        parameters=[('x_gap', 5.0, ParameterDescriptor(description='The length in mm of the sample to be scanned in X direction.')),
-                    ('y_gap', 5.0, ParameterDescriptor(description='The length in mm of the sample to be scanned in Y direction.')),
-                    ('x_points', 5, ParameterDescriptor(description='The number points to be scanned in X direction.')),
-                    ('y_points', 5, ParameterDescriptor(description='The number of points to be scanned in Y direction.'))
+        parameters=[('x_gap', 0.2, ParameterDescriptor(description='The gap in mm between two points in X direction.')),
+                    ('y_gap', 0.2, ParameterDescriptor(description='The gap in mm between two points in Y direction.')),
+                    ('x_points', 51, ParameterDescriptor(description='The number points to be scanned in X direction.')),
+                    ('y_points', 51, ParameterDescriptor(description='The number of points to be scanned in Y direction.'))
                     ])
 
     node.get_logger().info(f'x gap: {x_gap.value}, y gap: {y_gap.value}, x points: {x_points.value}, y points: {y_points.value}')

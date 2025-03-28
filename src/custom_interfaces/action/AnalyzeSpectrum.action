@@ -1,8 +1,7 @@
 # Request
 ---
 # Result
-float32[] peak_start
-float32[] peak_end
+string[] peak_range
 float32[] peak_area
 ---
 # Feedback

@@ -10,7 +10,6 @@ from utils.analytical_dev_ctrl import Z300Controller
 from custom_interfaces.action import ExportSpectrum
 from std_msgs.msg import String
 from utils.servers import RealServer
-from typing import override
 
 class Z300ExportActionServer(RealServer):
     """
@@ -29,7 +28,6 @@ class Z300ExportActionServer(RealServer):
         
         self.z300_ctrl = Z300Controller('http://192.168.50.2:1234')
     
-    @override
     def generate_feedback_message(self, elapsed_time):
         """
         Create a feedback message that populates the time elapsed.
@@ -38,10 +36,9 @@ class Z300ExportActionServer(RealServer):
             :class:`std_msgs.msg.String`: the populated feedback message
         """
         msg = self.action_type.Feedback() 
-        msg.feedback = f'Time elapsed: {elapsed_time:.2%} s.'
+        msg.feedback = f'Time elapsed: {elapsed_time:.2} s.'
         return msg
 
-    @override
     def goal_callback(self, goal_request):
         """
         Args:
@@ -55,7 +52,6 @@ class Z300ExportActionServer(RealServer):
             self.node.get_logger().info('Received and rejected a goal because z300 is already running')
             return rclpy.action.server.GoalResponse.REJECT
     
-    @override
     async def execute_goal_callback(
             self,
             goal_handle: rclpy.action.server.ServerGoalHandle
@@ -81,26 +77,26 @@ class Z300ExportActionServer(RealServer):
                 if goal_handle.is_active:
                     if goal_handle.is_cancel_requested:
                         result = self.generate_cancelled_result()
-                        message = f'Goal cancelled at {elapsed_time:.2%}'
+                        message = f'Goal cancelled at {elapsed_time:.2} s'
                         self.node.get_logger().info(message)
                         goal_handle.canceled()
                         return result
                     # ideally would never come to this branch because repeated goals would be rejected
                     elif goal_handle.goal_id != self.goal_handle.goal_id:
                         result = self.generate_preempted_result()
-                        message = f'Goal pre-empted at {elapsed_time:.2%}'
+                        message = f'Goal pre-empted at {elapsed_time:.2} s'
                         self.node.get_logger().info(message)
                         goal_handle.abort()
                         return result
-                    elif self.z300_ctrl.is_device_ready():
-                        self.node.get_logger().info(f'Sending feedback {elapsed_time:.2%}')
+                    elif self.z300_ctrl.res['export'] is not None:
+                        self.node.get_logger().info(f'Time elapsed: {elapsed_time:.2} s')
                         result = self.generate_success_result()
                         message = 'Goal executed with success: export'
                         self.node.get_logger().info(message)
                         goal_handle.succeed()
                         return result
                     else:
-                        self.node.get_logger().info(f'Sending feedback {elapsed_time:.2%}')
+                        self.node.get_logger().info(f'Time elapsed: {elapsed_time:.2} s')
                         goal_handle.publish_feedback(
                             self.generate_feedback_message(elapsed_time)
                         )

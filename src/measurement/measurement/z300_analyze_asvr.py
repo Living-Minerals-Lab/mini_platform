@@ -26,7 +26,7 @@ class Z300AnalyzeActionServer(RealServer):
                          action_name='analyze_spectrum',
                          action_type=AnalyzeSpectrum)
         
-        self.z300_ctrl = Z300Controller('http://192.168.50.2:1234')
+        self.z300_ctrl = Z300Controller('http://192.168.50.43:1234')
 
     def generate_feedback_message(self, elapsed_time):
         """

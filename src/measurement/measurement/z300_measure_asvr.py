@@ -29,7 +29,7 @@ class Z300MeasureActionServer(RealServer):
                          action_name='take_measurement',
                          action_type=TakeMeasurement)
         
-        self.z300_ctrl = Z300Controller('http://192.168.50.2:1234')
+        self.z300_ctrl = Z300Controller('http://192.168.50.43:1234')
         
         # In addition to the action server, create a publisher publishing the device status continuously
         self._publisher = self.node.create_publisher(msg_type=String, topic='z300_status', qos_profile=10)

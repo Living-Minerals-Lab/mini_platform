@@ -55,9 +55,9 @@ class Z300AnalyzeActionServer(RealServer):
     def generate_success_result(self):
         res = self.action_type.Result()
         rng, area = [], []
-        for r in self.z300_ctrl.res['analyze']:
+        for r in self.z300_ctrl.res['analyze']['val']:
             rng.append(r)
-            area.append(self.z300_ctrl.res['analyze'][r])
+            area.append(self.z300_ctrl.res['analyze']['val'][r])
         res.peak_range = rng
         res.peak_area = area
         return res
@@ -97,12 +97,18 @@ class Z300AnalyzeActionServer(RealServer):
                         self.node.get_logger().info(message)
                         goal_handle.abort()
                         return result
-                    elif self.z300_ctrl.res['analyze'] is not None:
+                    elif self.z300_ctrl.res['analyze']['msg'] is not None:
                         self.node.get_logger().info(f'Time elapsed: {elapsed_time:.2} s')
-                        message = f'Goal executed with success: analyze {self.z300_ctrl.res["analyze"]}'
-                        self.node.get_logger().info(message)
-                        result = self.generate_success_result()
-                        goal_handle.succeed()
+                        if self.z300_ctrl.res['analyze']['msg'] == 'success':
+                            message = f'Goal executed with success: analyze {self.z300_ctrl.res["analyze"]['val']}'
+                            self.node.get_logger().info(message)
+                            result = self.generate_success_result()
+                            goal_handle.succeed()
+                        else:
+                            message = f'Goal execution failed: analyze {self.z300_ctrl.res["analyze"]['val']}'
+                            self.node.get_logger().info(message)
+                            result = self.generate_success_result()
+                            goal_handle.abort()
                         return result
                     else:
                         self.node.get_logger().info(f'Time elapsed: {elapsed_time:.2} s')

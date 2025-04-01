@@ -88,12 +88,18 @@ class Z300ExportActionServer(RealServer):
                         self.node.get_logger().info(message)
                         goal_handle.abort()
                         return result
-                    elif self.z300_ctrl.res['export'] is not None:
+                    elif self.z300_ctrl.res['export']['msg'] is not None:
                         self.node.get_logger().info(f'Time elapsed: {elapsed_time:.2} s')
-                        result = self.generate_success_result()
-                        message = 'Goal executed with success: export'
-                        self.node.get_logger().info(message)
-                        goal_handle.succeed()
+                        if self.z300_ctrl.res['export']['msg'] == 'success':
+                            result = self.generate_success_result()
+                            message = 'Goal executed with success: export'
+                            self.node.get_logger().info(message)
+                            goal_handle.succeed()
+                        else:
+                            result = self.generate_success_result()
+                            message = 'Goal execution failed: export'
+                            self.node.get_logger().info(message)
+                            goal_handle.abort()
                         return result
                     else:
                         self.node.get_logger().info(f'Time elapsed: {elapsed_time:.2} s')

@@ -125,7 +125,7 @@ def gen_gcode(x_interval: float, y_interval: float, x_points: int, y_points: int
             gcode.append('G17 G21 G90 ' + '\n'
                          f'G00 X{x} Y{y}' + '\n')
     
-    return gcode
+    return gcode[::-1]
 
 def create_root():
     root = Parallel(

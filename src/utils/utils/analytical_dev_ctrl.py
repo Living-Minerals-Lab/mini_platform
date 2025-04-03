@@ -116,9 +116,9 @@ class Z300Controller(AnalyticalDeviceController):
     def on_export(self, data):
         self.res['export']['msg'] = data
 
-    def on_analyze(self, data):
-        self.res['analyze']['msg'] = data[0]
-        self.res['analyze']['val'] = data[1]
+    def on_analyze(self, msg, val):
+        self.res['analyze']['msg'] = msg
+        self.res['analyze']['val'] = val
 
     def is_device_ready(self) -> bool:
         """

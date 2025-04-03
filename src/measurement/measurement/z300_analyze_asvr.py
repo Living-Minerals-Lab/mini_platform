@@ -100,12 +100,12 @@ class Z300AnalyzeActionServer(RealServer):
                     elif self.z300_ctrl.res['analyze']['msg'] is not None:
                         self.node.get_logger().info(f'Time elapsed: {elapsed_time:.2} s')
                         if self.z300_ctrl.res['analyze']['msg'] == 'success':
-                            message = f'Goal executed with success: analyze {self.z300_ctrl.res["analyze"]['val']}'
+                            message = f'Goal executed with success: analyze {self.z300_ctrl.res["analyze"]["val"]}'
                             self.node.get_logger().info(message)
                             result = self.generate_success_result()
                             goal_handle.succeed()
                         else:
-                            message = f'Goal execution failed: analyze {self.z300_ctrl.res["analyze"]['val']}'
+                            message = f'Goal execution failed: analyze {self.z300_ctrl.res["analyze"]["val"]}'
                             self.node.get_logger().info(message)
                             result = self.generate_success_result()
                             goal_handle.abort()

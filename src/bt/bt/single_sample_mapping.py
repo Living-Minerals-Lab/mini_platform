@@ -263,7 +263,7 @@ def main():
         rclpy.try_shutdown()
         sys.exit(1)
 
-    tree.tick_tock(2000)
+    tree.tick_tock(500)
 
 
     try:

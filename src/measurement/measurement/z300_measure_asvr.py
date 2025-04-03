@@ -110,7 +110,7 @@ class Z300MeasureActionServer(RealServer):
                             goal_handle.succeed()
                         else:
                             result = self.generate_success_result()
-                            message = 'Goal execution failed: measure'
+                            message = f'Goal execution failed: measure'
                             self.node.get_logger().info(message)
                             goal_handle.abort()
                         return result
